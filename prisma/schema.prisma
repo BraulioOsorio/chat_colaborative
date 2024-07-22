@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model permissions {
+  id_permission     Int                @id @default(autoincrement())
+  name              String
+  status_permission Boolean            @default(true)
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @default(now())
+  role_permissions  user_permissions[]
+}
+
+model roles {
+  id_role    Int      @id @default(autoincrement())
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  users      users[]
+}
+
+model users {
+  id_user                  String                 @id
+  network_user             String                 @unique
+  full_name                String
+  photo_url                String?
+  dominio                  String?
+  password                 String
+  status_user              Boolean                @default(true)
+  role_id                  Int
+  role                     roles                  @relation(fields: [role_id], references: [id_role])
+  role_permission          user_permissions[]
+  history_mantenaces       history_maintenances[]
+  users_channels           users_channels[]
+  tokens                   tokens[]
+  sent_direct_messages     direct_message[]       @relation("SentMessages")
+  received_direct_messages direct_message[]       @relation("ReceivedMessages")
+  messages                 messages[]
+}
+
+model user_permissions {
+  id_user_permission Int         @id @default(autoincrement())
+  permission_id      Int
+  user_id            String
+  Permissions        permissions @relation(fields: [permission_id], references: [id_permission])
+  users              users       @relation(fields: [user_id], references: [id_user])
+}
+
+model channels {
+  id_channel     Int              @id @default(autoincrement())
+  name           String
+  description    String?
+  status_channel Boolean          @default(true)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @default(now())
+  messages       messages[]
+  users_channels users_channels[]
+}
+
+model messages {
+  id_message   Int      @id @default(autoincrement())
+  user_id      String
+  channel_id   Int
+  content      String   @db.Text
+  url_file     String?
+  type_message String   @default("message")
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
+  channels     channels @relation(fields: [channel_id], references: [id_channel])
+  users        users    @relation(fields: [user_id], references: [id_user])
+}
+
+model history_maintenances {
+  id_history_maintenance Int      @id @default(autoincrement())
+  user_id                String
+  date_maintenance       DateTime @default(now())
+  description            String
+  users                  users    @relation(fields: [user_id], references: [id_user])
+}
+
+model direct_message {
+  id_direct_message Int      @id @default(autoincrement())
+  send_id           String
+  recipient_id      String
+  content           String   @db.Text
+  url_file          String?
+  message_type      String   @default("message")
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+  users_send        users    @relation("SentMessages", fields: [send_id], references: [id_user], onUpdate: NoAction, onDelete: NoAction)
+  users_receive     users    @relation("ReceivedMessages", fields: [recipient_id], references: [id_user], onUpdate: NoAction, onDelete: NoAction)
+}
+
+model users_channels {
+  id_user_channel Int      @id @default(autoincrement())
+  user_id         String
+  channel_id      Int
+  users           users    @relation(fields: [user_id], references: [id_user])
+  channels        channels @relation(fields: [channel_id], references: [id_channel])
+}
+
+model tokens {
+  id_token     Int      @id @default(autoincrement())
+  token        String
+  user_id      String
+  status_token Boolean  @default(true)
+  users        users    @relation(fields: [user_id], references: [id_user])
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
+}
+
+model vulgar_words {
+  id_vulgar_words   Int      @id @default(autoincrement())
+  word      String           @unique
+  created_at   DateTime      @default(now())
+}
