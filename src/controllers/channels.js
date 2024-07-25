@@ -119,13 +119,11 @@ export const get_channel_users = async (req, res) => {
 export const get_messages = async (channelId,user) => {
     try {
 
-        const channel_messages = await prisma.channels.findUnique({ where: { id_channel: +channelId },
-            select: {id_channel: true,name: true,description: true,messages: {select: {
-                id_message: true,user_id: true,content: true,url_file: true,type_message: true,created_at: true,users: {select: {full_name: true}}
-                }
-            }
-            }
+        const channel_messages = await prisma.channels.findUnique({
+          where: { id_channel: +channelId },
+          select: { id_channel: true, name: true, description: true, messages: { select: { id_message: true, user_id: true, content: true, url_file: true, type_message: true, created_at: true, users: { select: { full_name: true } } }, orderBy: { created_at: 'asc' } } }
         });
+
         
         if (!channel_messages) {
             return { error: 'El canal con este ID no existe' };
