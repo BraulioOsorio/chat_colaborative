@@ -36,7 +36,7 @@ export const create_channel = async (req,res) => {
 
 export const get_channels = async (req, res) => {
     try {
-        let channel = await prisma.channels.findMany({ where: { users_channels: { some: { user_id: req.user.id_user } } }, select: { id_channel: true, name: true } });
+        let channel = await prisma.channels.findMany({ where: { users_channels: { some: { user_id: req.user.id_user } } }, select: { id_channel: true, name: true,status_channel : true,description:true } });
 
         return res.json(channel)
     } catch (error) {
