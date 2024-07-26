@@ -9,6 +9,8 @@ let io;
 const initialize_web_socket  = (server, cors_socket) => {
     io = new Server(server, cors_socket);
     io.on('connection', (socket) => {
+        //socket.setMaxListeners(20);
+        //socket.on('disconnect', () => {console.log('Client disconnected');});
         socket.on('join_channel', async ({ channelId, token }) => {
             try {
                 authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (error, user) => {
@@ -20,7 +22,7 @@ const initialize_web_socket  = (server, cors_socket) => {
                         socket.emit('messages_channel', result.messages);
                     }
                     socket.join(channelId);
-                    socket.on('disconnect', () => {console.log('Client disconnected')});
+                    
                 });
             } catch (error) {
                 console.error('Error in authentication or fetching messages:', error);
@@ -40,7 +42,7 @@ const initialize_web_socket  = (server, cors_socket) => {
                         socket.emit('get_direct_messages', result)
                     }
                     socket.join(room_key);
-                    socket.on('disconnect', () => {console.log('Client disconnected')});
+                    
                 });
             } catch (error) {
                 console.error('Error in authentication or fetching messages:', error);
@@ -59,7 +61,7 @@ const initialize_web_socket  = (server, cors_socket) => {
                         socket.emit('conversations', result); 
                     }
                     socket.join(user.id_user);
-                    socket.on('disconnect', () => {console.log('Client disconnected')});
+                    
                 });
             } catch (error) {
                 console.error('Error in authentication or fetching messages:', error);
