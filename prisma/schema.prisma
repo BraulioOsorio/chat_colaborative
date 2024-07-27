@@ -62,6 +62,7 @@ model channels {
   id_channel     Int              @id @default(autoincrement())
   name           String
   description    String?
+  image_channel    String?
   status_channel Boolean          @default(true)
   created_at     DateTime         @default(now())
   updated_at     DateTime         @default(now())

@@ -9,12 +9,12 @@ export const create_channel = async (req,res) => {
         if (req.user.role.name !== "ADMIN") 
             return res.status(401).json({ error: 'El usuario no tiene permiso' });
 
-        const { name, description, user_ids } = req.body;
+        const { name, description, user_ids,image_channel } = req.body;
 
         const all_user_ids = [req.user.id_user, ...user_ids];
 
         const new_channel = await prisma.channels.create({
-            data: { name, description,created_at:date_time }
+            data: { name, description,created_at:date_time,image_channel }
         });
 
         const user_channels_data = all_user_ids.map(user_id => ({
@@ -36,7 +36,7 @@ export const create_channel = async (req,res) => {
 
 export const get_channels = async (req, res) => {
     try {
-        let channel = await prisma.channels.findMany({ where: { users_channels: { some: { user_id: req.user.id_user } } }, select: { id_channel: true, name: true,status_channel : true,description:true } });
+        let channel = await prisma.channels.findMany({ where: { users_channels: { some: { user_id: req.user.id_user } } }, select: { id_channel: true, name: true,status_channel : true,description:true,image_channel:true } });
 
         return res.json(channel)
     } catch (error) {

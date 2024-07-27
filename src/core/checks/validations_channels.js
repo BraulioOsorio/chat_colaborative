@@ -4,6 +4,7 @@ import { prisma } from '../db/index.js';
 export const create_channels_validation = [
   body('name').notEmpty().withMessage('El nombre del canal no puede estar vacío'),
   body('description').optional().isString().withMessage('La descripción debe ser una cadena de texto'),
+  body('image_channel').optional().isString().withMessage('La imagen debe ser una cadena de texto'),
   body('user_ids').isArray({ min: 1 }).withMessage('user_ids debe ser un arreglo con al menos un ID de usuario'),
   body('user_ids.*').isString().withMessage('Cada user_id debe ser una cadena de texto')
   .custom(async (id_user) => {
@@ -36,7 +37,8 @@ export const update_channels_validation = [
       if (!channel) { throw new Error('El canal con este ID no existe')}
     }),
   body('name').notEmpty().withMessage('El nombre no puede estar vacio'),
-  body('description').optional()
+  body('description').optional(),
+  body('image_channel').optional()
 ];
 
 export const get_messages_validation = [
