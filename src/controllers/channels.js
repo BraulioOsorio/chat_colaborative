@@ -121,7 +121,7 @@ export const get_messages = async (channelId,user) => {
 
         const channel_messages = await prisma.channels.findUnique({
           where: { id_channel: +channelId },
-          select: { id_channel: true, name: true, description: true, messages: { select: { id_message: true, user_id: true, content: true, url_file: true, type_message: true, created_at: true, users: { select: { full_name: true } } }, orderBy: { created_at: 'asc' } } }
+          select: { id_channel: true, name: true, description: true, messages: { select: { id_message: true, user_id: true, content: true, url_file: true, type_message: true, created_at: true, users: { select: { full_name: true,photo_url:true,id_user:true } } }, orderBy: { created_at: 'asc' } } }
         });
 
         
@@ -174,7 +174,7 @@ export const send_message = async (req,res) => {
 
         const response = {
             ...message_sent,
-            users:[{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}]
+            users:{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}
         };
 
         io.to(req.body.channel_id).emit('new_message_channel', response);
@@ -207,7 +207,7 @@ export const edit_message = async (req,res) => {
 
         const response = {
             ...message_sent,
-            users:[{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}]
+           users:{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}
         };
 
         io.to(message_sent.channel_id).emit('update_message_channel', response);
@@ -229,7 +229,7 @@ export const delete_message = async (req,res) => {
 
         const response = {
             ...message_delete,
-            users:[{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}]
+           users:{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}
         };
 
         io.to(message_delete.channel_id).emit('delete_message_channel', response);
