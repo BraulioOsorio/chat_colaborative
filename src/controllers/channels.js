@@ -174,7 +174,7 @@ export const send_message = async (req,res) => {
 
         const response = {
             ...message_sent,
-            full_name: req.user.full_name
+            users:[{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}]
         };
 
         io.to(req.body.channel_id).emit('new_message_channel', response);
@@ -207,7 +207,7 @@ export const edit_message = async (req,res) => {
 
         const response = {
             ...message_sent,
-            full_name: req.user.full_name,
+            users:[{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}]
         };
 
         io.to(message_sent.channel_id).emit('update_message_channel', response);
@@ -229,7 +229,7 @@ export const delete_message = async (req,res) => {
 
         const response = {
             ...message_delete,
-            full_name: req.user.full_name,
+            users:[{full_name: req.user.full_name,avatar_url:req.user.photo_url,user_id:req.user.id_user}]
         };
 
         io.to(message_delete.channel_id).emit('delete_message_channel', response);

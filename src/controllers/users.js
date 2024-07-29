@@ -13,7 +13,7 @@ export const create_user = async (req, res) => {
         } else {
             return res.status(401).json({ error: 'El usuario no tiene permiso' });
         }
-        const new_user = await prisma.users.create({data: { ...req.body, id_user: generate_user_id(15), password: hashSync(req.body.password, 10), role_id: id_rol}});
+        const new_user = await prisma.users.create({data: { ...req.body, id_user: generate_user_id(35), password: hashSync(req.body.password, 10), role_id: id_rol}});
         if(id_rol ===3){await prisma.user_permissions.create({data:{permission_id:1 ,user_id:new_user.id_user }})}
         return res.json(new_user);
     } catch (error) {
