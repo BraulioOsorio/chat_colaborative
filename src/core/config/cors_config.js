@@ -5,6 +5,6 @@ const cors_options = {
   methods: 'GET,PUT,POST,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
   credentials: true, 
-};
+}; 
 
 export default cors(cors_options);
