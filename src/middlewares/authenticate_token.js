@@ -4,19 +4,13 @@ import { SECRET_KEY } from '../core/config/config.js';
 import { create_access_token } from '../core/config/utils.js';
 import tokens from '../controllers/tokens.js'
 import multer from 'multer';
-import { fileURLToPath } from 'url';
 import path from 'path';
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log(req.body.message_type); 
-    const dir = file.mimetype.startsWith('image/') ? path.join(__dirname, '..', '..', 'public', 'uploads', 'images') : path.join(__dirname, '..', '..', 'public', 'uploads', 'documents');
-      cb(null, dir);
-  },
+    const dir = file.mimetype.startsWith('image/') ? 'public/uploads/images' : 'public/uploads/documents';
+    cb(null, path.join(process.cwd(), dir)); 
+},
   filename: (req, file, cb) => {
     const timestamp = Date.now();
     const originalName = file.originalname;

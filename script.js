@@ -12,7 +12,7 @@ document.getElementById('conversationForm').addEventListener('submit', async (ev
     }
     
     try {
-        const response = await fetch('http://localhost:3000/collaborative_chat/direct_message/create_conversation', {
+        const response = await fetch('https://intern-chat-backend-production-uy3j.onrender.com/collaborative_chat/direct_message/create_conversation', {
             method: 'POST',
             body: formData,
             headers: {
