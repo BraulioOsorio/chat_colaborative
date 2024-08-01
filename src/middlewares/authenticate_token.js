@@ -3,6 +3,31 @@ import { prisma } from '../core/db/index.js';
 import { SECRET_KEY } from '../core/config/config.js';
 import { create_access_token } from '../core/config/utils.js';
 import tokens from '../controllers/tokens.js'
+import multer from 'multer';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    console.log(req.body.message_type); 
+    const dir = file.mimetype.startsWith('image/') ? path.join(__dirname, '..', '..', 'public', 'uploads', 'images') : path.join(__dirname, '..', '..', 'public', 'uploads', 'documents');
+      cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const originalName = file.originalname;
+    const extension = path.extname(originalName);
+    const baseName = path.basename(originalName, extension); 
+    const formattedName = `${timestamp}(${baseName})${extension}`; 
+    cb(null, formattedName);
+  }
+});
+
+const upload = multer({ storage });
 
 export const authenticate_token = async (req, res, next) => {
   const auth_header = req.headers['authorization'];
@@ -62,3 +87,7 @@ export const authenticate_token_messages = async (req,res,next) => {
     return next(null, user); 
   });
 };
+
+export const uploadMiddleware = upload;
+
+export default upload;

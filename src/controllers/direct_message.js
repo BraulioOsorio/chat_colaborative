@@ -3,6 +3,7 @@ import { get_current_datetime } from '../core/config/utils.js';
 import { io } from '../websocket.js';
 import { create_room_key } from '../core/config/utils.js';
 import { get_direct_messages } from '../core/checks/validations_direct_messages.js';
+import upload from '../middlewares/authenticate_token.js';
 export const delete_message = async (req, res) => {
     try {
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.params.id } })
@@ -33,7 +34,7 @@ export const update_message = async (req, res) => {
         const room_key = create_room_key(message_updated.send_id, message_updated.recipient_id)
         const response = {
             ...message_updated,
-            full_name: req.user.full_name,
+            user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         io.to(room_key).emit('conversation_update_direct', response);
         res.json(message_updated)
@@ -75,18 +76,24 @@ export const get_conversations = async (id_user) => {
     }
 }
 
-
-
 export const create_conversation = async (req, res) => {
     try {
+        await new Promise((resolve, reject) => {
+            upload.single('file')(req, res, (err) => {
+                if (err) {return reject(err);}
+                resolve();
+            });
+        });
+        const file = req.file;
+        const relativeFilePath = file ? `/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
         let date_time = get_current_datetime()
 
         const get_messages_validator_exist = await get_messages_conversation(req.user.id_user, req.user.id_user, req.body.recipient_id)
 
-        const conversation = await prisma.direct_message.create({ data: { ...req.body, send_id: req.user.id_user, created_at: date_time } });
+        const conversation = await prisma.direct_message.create({ data: { ...req.body, send_id: req.user.id_user, created_at: date_time,url_file: relativeFilePath} });
         const response = {
             ...conversation,
-            full_name: req.user.full_name,
+            user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         const room_key = create_room_key(conversation.send_id, conversation.recipient_id)
         io.to(room_key).emit('new_conversation_direct', response);
