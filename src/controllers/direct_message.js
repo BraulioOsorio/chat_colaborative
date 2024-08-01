@@ -49,9 +49,12 @@ export const get_conversations = async (id_user) => {
             where: {
                 OR: [{ recipient_id: id_user }, { send_id: id_user, }]
             },
+            orderBy: {
+                created_at: 'desc' // Ordena los mensajes por fecha de creación (descendente)
+            },
             distinct: ['send_id', 'recipient_id'],
             select: {
-                send_id: true, recipient_id: true, users_send: { select: { full_name: true, network_user: true } }, users_receive: {
+                send_id: true, recipient_id: true,content:true ,users_send: { select: { full_name: true, network_user: true } }, users_receive: {
                     select: { full_name: true, network_user: true }
                 }
             }
@@ -68,7 +71,7 @@ export const get_conversations = async (id_user) => {
                 unique_messages.push(message);
             }
         });
-
+        console.log(unique_messages);
         return unique_messages;
     } catch (error) {
         console.error('Error get_conversations:', error);
@@ -84,6 +87,7 @@ export const create_conversation = async (req, res) => {
                 resolve();
             });
         });
+        
         const file = req.file;
         const relativeFilePath = file ? `/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
         let date_time = get_current_datetime()

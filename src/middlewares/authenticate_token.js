@@ -8,7 +8,7 @@ import path from 'path';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = file.mimetype.startsWith('image/') ? 'public/uploads/images' : 'public/uploads/documents';
+    const dir = file.mimetype.startsWith('image/') ? 'uploads/images' : 'uploads/documents';
     cb(null, path.join(process.cwd(), dir)); 
 },
   filename: (req, file, cb) => {

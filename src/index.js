@@ -10,7 +10,7 @@ import path from 'path';
 
 const app = express();
 const server = create_server(app);
-app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(cors_config);
