@@ -54,7 +54,8 @@ export const get_conversations = async (id_user) => {
             },
             distinct: ['send_id', 'recipient_id'],
             select: {
-                send_id: true, recipient_id: true,content:true
+                send_id: true, recipient_id: true,content:true,users_send: { select: { full_name: true, network_user: true } },
+                users_receive: { select: { full_name: true, network_user: true } }
             }
         });
 
