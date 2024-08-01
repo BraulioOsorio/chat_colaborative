@@ -2,6 +2,7 @@ import { get_current_datetime } from '../core/config/utils.js';
 import { prisma } from '../core/db/index.js';
 import { group_deletion_information } from './history_maintenances.js';
 import { io } from '../websocket.js';
+import upload from '../middlewares/authenticate_token.js';
 
 export const create_channel = async (req,res) => {
     try {
@@ -150,6 +151,12 @@ export const get_messages = async (channelId,user) => {
 
 export const send_message = async (req,res) => {
     try {
+        await new Promise((resolve, reject) => {
+            upload.single('file')(req, res, (err) => {
+                if (err) {return reject(err);}
+                resolve();
+            });
+        });
         const user_channel = await prisma.users_channels.findFirst({ where: { user_id: req.user.id_user, channel_id: +req.body.channel_id } });
 
         if (!user_channel)
@@ -169,8 +176,13 @@ export const send_message = async (req,res) => {
             }).join(' ');
         };
 
+        
+        
+        const file = req.file;
+        const relativeFilePath = file ? `/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
+
         const censored_content = censor_message(req.body.content);
-        const message_sent = await prisma.messages.create({ data: {...req.body,content: censored_content, user_id: req.user.id_user } });
+        const message_sent = await prisma.messages.create({ data: {...req.body,content: censored_content, user_id: req.user.id_user,url_file:relativeFilePath,channel_id:+req.body.channel_id } });
 
         const response = {
             ...message_sent,

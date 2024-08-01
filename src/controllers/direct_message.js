@@ -90,7 +90,6 @@ export const get_conversations = async (id_user) => {
                 unique_messages.push(adjustedMessage);
             }
         });
-        console.log(unique_messages);
         return unique_messages;
     } catch (error) {
         console.error('Error get_conversations:', error);

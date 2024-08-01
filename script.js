@@ -2,9 +2,9 @@ document.getElementById('conversationForm').addEventListener('submit', async (ev
     event.preventDefault();
     
     const formData = new FormData();
-    formData.append('recipient_id', document.getElementById('recipientId').value);
+    formData.append('user_id', document.getElementById('recipientId').value);
     formData.append('content', document.getElementById('message').value);
-    formData.append('message_type', document.getElementById('message').value);
+    formData.append('channel_id',4);
     
     const fileInput = document.getElementById('file');
     if (fileInput.files.length > 0) {
@@ -12,7 +12,7 @@ document.getElementById('conversationForm').addEventListener('submit', async (ev
     }
     
     try {
-        const response = await fetch('https://intern-chat-backend-production-uy3j.onrender.com/collaborative_chat/direct_message/create_conversation', {
+        const response = await fetch('http://localhost:3000/collaborative_chat/channel/send_message', {
             method: 'POST',
             body: formData,
             headers: {
