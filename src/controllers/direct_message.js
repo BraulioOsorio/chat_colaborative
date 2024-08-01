@@ -50,13 +50,11 @@ export const get_conversations = async (id_user) => {
                 OR: [{ recipient_id: id_user }, { send_id: id_user, }]
             },
             orderBy: {
-                created_at: 'desc' // Ordena los mensajes por fecha de creación (descendente)
+                created_at: 'desc'
             },
             distinct: ['send_id', 'recipient_id'],
             select: {
-                send_id: true, recipient_id: true,content:true ,users_send: { select: { full_name: true, network_user: true } }, users_receive: {
-                    select: { full_name: true, network_user: true }
-                }
+                send_id: true, recipient_id: true,content:true
             }
         });
 
@@ -68,7 +66,27 @@ export const get_conversations = async (id_user) => {
             if (!unique_pairs[key1] && !unique_pairs[key2]) {
                 unique_pairs[key1] = true;
                 unique_pairs[key2] = true;
-                unique_messages.push(message);
+                const isSender = message.send_id === id_user;
+                const adjustedMessage = {
+                    content: message.content,
+                    send_id: message.send_id,
+                    recipient_id: message.recipient_id,
+                    user_send: isSender 
+                        ? {
+                            full_name: message.users_send.full_name,network_user: message.users_send.network_user,id_user: message.send_id}
+                        : {
+                            full_name: message.users_receive.full_name,network_user: message.users_receive.network_user,id_user: message.recipient_id 
+                        },
+                    user_recipient: isSender 
+                        ? {
+                            full_name: message.users_receive.full_name,network_user: message.users_receive.network_user,id_user: message.recipient_id 
+                        }
+                        : {
+                            full_name: message.users_send.full_name, network_user: message.users_send.network_user,id_user: message.send_id
+                        }
+                };
+
+                unique_messages.push(adjustedMessage);
             }
         });
         console.log(unique_messages);
