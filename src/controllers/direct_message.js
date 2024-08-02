@@ -7,13 +7,10 @@ import upload from '../middlewares/authenticate_token.js';
 export const delete_message = async (req, res) => {
     try {
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.params.id } })
-        if (req.user.id_user !== direct_message.send_id)
-            return res.status(401).json({ error: 'El usuario no tiene permisos ' });
-
+        if (req.user.id_user !== direct_message.send_id){return res.status(401).json({ error: 'El usuario no tiene permisos ' })};
         let message_deleted = await prisma.direct_message.delete({ where: { id_direct_message: +req.params.id } })
         const room_key = create_room_key(message_deleted.send_id, message_deleted.recipient_id)
         io.to(room_key).emit('conversation_delete_direct', message_deleted);
-
         res.json(message_deleted)
     } catch (error) {
         console.error('Error:', error);
@@ -24,17 +21,12 @@ export const delete_message = async (req, res) => {
 export const update_message = async (req, res) => {
     try {
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.body.id_direct_message } })
-        if (!direct_message) {
-            return res.status(401).json({ error: 'The message with this ID does not exist ' });
-        }
-        if (req.user.id_user !== direct_message.send_id)
-            return res.status(401).json({ error: 'El usuario no tiene permisos ' });
-
+        if (!direct_message) {return res.status(401).json({ error: 'The message with this ID does not exist ' });}
+        if (req.user.id_user !== direct_message.send_id){return res.status(401).json({ error: 'El usuario no tiene permisos ' })};
         let message_updated = await prisma.direct_message.update({ where: { id_direct_message: +req.body.id_direct_message }, data: req.body })
         const room_key = create_room_key(message_updated.send_id, message_updated.recipient_id)
         const response = {
-            ...message_updated,
-            user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
+            ...message_updated, user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         io.to(room_key).emit('conversation_update_direct', response);
         res.json(message_updated)
@@ -46,19 +38,13 @@ export const update_message = async (req, res) => {
 export const get_conversations = async (id_user) => {
     try {
         const unique_senders_messages = await prisma.direct_message.findMany({
-            where: {
-                OR: [{ recipient_id: id_user }, { send_id: id_user, }]
-            },
-            orderBy: {
-                created_at: 'desc'
-            },
+            where: {OR: [{ recipient_id: id_user }, { send_id: id_user, }]},
+            orderBy: {created_at: 'desc'},
             distinct: ['send_id', 'recipient_id'],
             select: {
-                send_id: true, recipient_id: true,content:true,users_send: { select: { full_name: true, network_user: true } },
-                users_receive: { select: { full_name: true, network_user: true } }
+                send_id: true, recipient_id: true,content:true,users_send: { select: { full_name: true, network_user: true } },users_receive: { select: { full_name: true, network_user: true } }
             }
         });
-
         const unique_messages = [];
         const unique_pairs = {};
         unique_senders_messages.forEach(message => {
@@ -69,24 +55,20 @@ export const get_conversations = async (id_user) => {
                 unique_pairs[key2] = true;
                 const isSender = message.send_id === id_user;
                 const adjustedMessage = {
-                    content: message.content,
-                    send_id: message.send_id,
-                    recipient_id: message.recipient_id,
+                    content: message.content,send_id: message.send_id,recipient_id: message.recipient_id,
                     user_send: isSender 
                         ? {
-                            full_name: message.users_send.full_name,network_user: message.users_send.network_user,id_user: message.send_id}
-                        : {
+                            full_name: message.users_send.full_name,network_user: message.users_send.network_user,id_user: message.send_id
+                        }: {
                             full_name: message.users_receive.full_name,network_user: message.users_receive.network_user,id_user: message.recipient_id 
                         },
                     user_recipient: isSender 
                         ? {
                             full_name: message.users_receive.full_name,network_user: message.users_receive.network_user,id_user: message.recipient_id 
-                        }
-                        : {
+                        }: {
                             full_name: message.users_send.full_name, network_user: message.users_send.network_user,id_user: message.send_id
                         }
                 };
-
                 unique_messages.push(adjustedMessage);
             }
         });
@@ -105,28 +87,23 @@ export const create_conversation = async (req, res) => {
                 resolve();
             });
         });
-        
+    
         const file = req.file;
         const relativeFilePath = file ? `/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
         let date_time = get_current_datetime()
-
         const get_messages_validator_exist = await get_messages_conversation(req.user.id_user, req.user.id_user, req.body.recipient_id)
-
         const conversation = await prisma.direct_message.create({ data: { ...req.body, send_id: req.user.id_user, created_at: date_time,url_file: relativeFilePath} });
         const response = {
-            ...conversation,
-            user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
+            ...conversation,user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         const room_key = create_room_key(conversation.send_id, conversation.recipient_id)
         io.to(room_key).emit('new_conversation_direct', response);
-
         if (get_messages_validator_exist.length === 0) {
             const new_conversations_recipient = await get_conversations(req.body.recipient_id);
             const new_conversations_send = await get_conversations(req.user.id_user);
             io.to(req.body.recipient_id).emit('new_conversations', new_conversations_recipient);
             io.to(req.user.id_user).emit('new_conversations', new_conversations_send);
         }
-
         return res.json(conversation)
     } catch (error) {
         console.error('Error get_conversations:', error);
@@ -135,28 +112,20 @@ export const create_conversation = async (req, res) => {
 }
 export const get_messages_conversation = async (id_user, send_id, recipient_id) => {
     try {
-        
         await get_direct_messages(send_id,recipient_id)
-        
         const conversation_messages = await prisma.direct_message.findMany({
             where: {
                 OR: [
-                    { send_id: recipient_id, recipient_id: id_user },
-                    { send_id: id_user, recipient_id: recipient_id },
-                    { send_id: send_id, recipient_id: id_user },
-                    { send_id: id_user, recipient_id: send_id }]
+                    { send_id: recipient_id, recipient_id: id_user },{ send_id: id_user, recipient_id: recipient_id },
+                    { send_id: send_id, recipient_id: id_user },{ send_id: id_user, recipient_id: send_id }]
             },
             orderBy: { created_at: 'asc' },
             select: {
                 id_direct_message: true, send_id: true, recipient_id: true, content: true, url_file: true, message_type: true, created_at: true, updated_at: true,
-                users_send: { select: { full_name: true } },
-                users_receive: { select: { full_name: true } }
+                users_send: { select: { full_name: true } },users_receive: { select: { full_name: true } }
             }
         });
-
-        if (!conversation_messages)
-            return { error: 'Error al obtener los mensajes de la conversacion' }
-
+        if (!conversation_messages){return { error: 'Error al obtener los mensajes de la conversacion' }}
         const result = conversation_messages.map(message => ({ ...message, position: message.send_id === id_user ? 'right' : 'left' }))
         return result
     } catch (error) {
@@ -166,9 +135,5 @@ export const get_messages_conversation = async (id_user, send_id, recipient_id) 
 }
 
 export default {
-    get_conversations,
-    create_conversation,
-    delete_message,
-    update_message,
-    get_messages_conversation
+    get_conversations,create_conversation,delete_message,update_message,get_messages_conversation
 };

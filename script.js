@@ -2,21 +2,21 @@ document.getElementById('conversationForm').addEventListener('submit', async (ev
     event.preventDefault();
     
     const formData = new FormData();
-    formData.append('user_id', document.getElementById('recipientId').value);
-    formData.append('content', document.getElementById('message').value);
-    formData.append('channel_id',4);
-    
+    formData.append('name', document.getElementById('recipientId').value);
+    formData.append('description', document.getElementById('message').value);
+    formData.append('user_ids',["413553d5-03a1-4","2f7b3610-48da-4155-aaa9-13f8f622cc1"]);
+    console.log(formData);
     const fileInput = document.getElementById('file');
     if (fileInput.files.length > 0) {
         formData.append('file', fileInput.files[0]);
     }
     
     try {
-        const response = await fetch('http://localhost:3000/collaborative_chat/channel/send_message', {
+        const response = await fetch('http://localhost:3000/collaborative_chat/channel/create_channel', {
             method: 'POST',
             body: formData,
             headers: {
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiYzFhOWY0NWEtNDUyMS00IiwiaWF0IjoxNzIyNTE2NjY4LCJleHAiOjE3MjI1MzgyNjh9.kRSRf7_uD_1Kr5VAp0m5had3plDjmpUVtEer2oFiNso' // Replace with actual token
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiYzFhOWY0NWEtNDUyMS00IiwiaWF0IjoxNzIyNjA2NzgyLCJleHAiOjE3MjI2MjgzODJ9.1iPyHLb7y0JVNr0buW_7wgWRBmLC-FouwlA3YOUHPmw' // Replace with actual token
             }
         });
 

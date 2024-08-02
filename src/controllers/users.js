@@ -2,9 +2,18 @@ import { prisma } from '../core/db/index.js';
 import {hashSync} from 'bcrypt';
 import { validate_role } from '../core/checks/validations_users.js';
 import { generate_user_id } from '../core/config/utils.js';
+import upload from '../middlewares/authenticate_token.js';
 
 export const create_user = async (req, res) => {
     let id_rol = null;
+    await new Promise((resolve, reject) => {
+        upload.single('file')(req, res, (err) => {
+            if (err) {return reject(err);}
+            resolve();
+        });
+    });
+    const file = req.file;
+    const relativeFilePath = file ? `/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
     try {
         if (req.user.role.name === "ADMIN") {
             id_rol = 3;
@@ -13,7 +22,7 @@ export const create_user = async (req, res) => {
         } else {
             return res.status(401).json({ error: 'El usuario no tiene permiso' });
         }
-        const new_user = await prisma.users.create({data: { ...req.body, id_user: generate_user_id(35), password: hashSync(req.body.password, 10), role_id: id_rol}});
+        const new_user = await prisma.users.create({data: { ...req.body, id_user: generate_user_id(35), password: hashSync(req.body.password, 10), role_id: id_rol,photo_url:relativeFilePath}});
         if(id_rol ===3){await prisma.user_permissions.create({data:{permission_id:1 ,user_id:new_user.id_user }})}
         return res.json(new_user);
     } catch (error) {
