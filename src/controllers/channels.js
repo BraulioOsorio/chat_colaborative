@@ -13,7 +13,7 @@ export const create_channel = async (req,res) => {
             });
         });
         const file = req.file;
-        const relativeFilePath = file ? `/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
+        const relativeFilePath = file ? `https://intern-chat-backend-production-uy3j.onrender.com/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
         let date_time = get_current_datetime()
         if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })};
         const { name, description, user_ids } = req.body;
@@ -130,7 +130,7 @@ export const send_message = async (req,res) => {
             }).join(' ');
         };
         const file = req.file;
-        const relativeFilePath = file ? `/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
+        const relativeFilePath = file ? `https://intern-chat-backend-production-uy3j.onrender.com/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
         const censored_content = censor_message(req.body.content);
         const message_sent = await prisma.messages.create({ data: {...req.body,content:censored_content, user_id: req.user.id_user,url_file:relativeFilePath,channel_id:+req.body.channel_id } });
         const response = {

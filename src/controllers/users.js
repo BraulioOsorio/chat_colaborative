@@ -13,7 +13,7 @@ export const create_user = async (req, res) => {
         });
     });
     const file = req.file;
-    const relativeFilePath = file ? `/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
+    const relativeFilePath = file ? `https://intern-chat-backend-production-uy3j.onrender.com/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
     try {
         if (req.user.role.name === "ADMIN") {
             id_rol = 3;
