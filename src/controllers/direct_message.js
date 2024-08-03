@@ -121,8 +121,8 @@ export const get_messages_conversation = async (id_user, send_id, recipient_id) 
             },
             orderBy: { created_at: 'asc' },
             select: {
-                id_direct_message: true, send_id: true, recipient_id: true, content: true, url_file: true, message_type: true, created_at: true, updated_at: true,
-                users_send: { select: { full_name: true } },users_receive: { select: { full_name: true } }
+                id_direct_message: true, send_id: true, recipient_id: true, content: true, url_file: true, type_message: true, created_at: true, updated_at: true,
+                users_send: { select: { full_name: true,photo_url:true } },users_receive: { select: { full_name: true,photo_url:true } }
             }
         });
         if (!conversation_messages){return { error: 'Error al obtener los mensajes de la conversacion' }}

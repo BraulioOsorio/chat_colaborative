@@ -9,7 +9,7 @@ export const create_direct_validation = [
   }),
   body('content').notEmpty().withMessage('El contenido no puede estar vacío'),
   body('url_file').optional(),
-  body('message_type').optional()
+  body('type_message').optional()
 ];
 
 export const update_direct_validation = [

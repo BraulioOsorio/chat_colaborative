@@ -16,7 +16,7 @@ document.getElementById('conversationForm').addEventListener('submit', async (ev
             method: 'POST',
             body: formData,
             headers: {
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiNDEzNTUzZDUtMDNhMS00IiwiaWF0IjoxNzIyNjg2OTE0LCJleHAiOjE3MjI3MDg1MTR9.TTgHsXQmzPb30OkRB6_xJxJX0JUl6D1shURFiBrZxSg' // Replace with actual token
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiYzFhOWY0NWEtNDUyMS00IiwiaWF0IjoxNzIyNjkzMjk0LCJleHAiOjE3MjI3MTQ4OTR9.2EG07x1QuQ6iPqGDYHKs5WUx8ajJj6p4nP5-KFrFx_M' // Replace with actual token
             }
         });
 

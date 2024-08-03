@@ -97,7 +97,7 @@ model direct_message {
   recipient_id      String
   content           String   @db.Text
   url_file          String?
-  message_type      String   @default("message")
+  type_message      String   @default("message")
   created_at        DateTime @default(now())
   updated_at        DateTime @default(now())
   users_send        users    @relation("SentMessages", fields: [send_id], references: [id_user], onUpdate: NoAction, onDelete: NoAction)
