@@ -12,11 +12,11 @@ document.getElementById('conversationForm').addEventListener('submit', async (ev
     }
     
     try {
-        const response = await fetch('http://localhost:3000/collaborative_chat/channel/create_channel', {
+        const response = await fetch('https://intern-chat-backend-production-uy3j.onrender.com/collaborative_chat/channel/create_channel', {
             method: 'POST',
             body: formData,
             headers: {
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiYzFhOWY0NWEtNDUyMS00IiwiaWF0IjoxNzIyNjA2NzgyLCJleHAiOjE3MjI2MjgzODJ9.1iPyHLb7y0JVNr0buW_7wgWRBmLC-FouwlA3YOUHPmw' // Replace with actual token
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiNDEzNTUzZDUtMDNhMS00IiwiaWF0IjoxNzIyNjg2OTE0LCJleHAiOjE3MjI3MDg1MTR9.TTgHsXQmzPb30OkRB6_xJxJX0JUl6D1shURFiBrZxSg' // Replace with actual token
             }
         });
 
