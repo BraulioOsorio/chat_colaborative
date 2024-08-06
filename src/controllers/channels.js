@@ -118,6 +118,7 @@ export const send_message = async (req,res) => {
                 resolve();
             });
         });
+        let date_time = get_current_datetime()
         const user_channel = await prisma.users_channels.findFirst({ where: { user_id: req.user.id_user, channel_id: +req.body.channel_id } });
         if (!user_channel){return res.status(401).json({ error: 'El usuario no pertenece al canal' })};
         const permissions_names = req.user.role_permission.map(rp => rp.Permissions.name);
@@ -132,7 +133,7 @@ export const send_message = async (req,res) => {
         const file = req.file;
         const relativeFilePath = file ? `https://intern-chat-backend-production-uy3j.onrender.com/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
         const censored_content = censor_message(req.body.content);
-        const message_sent = await prisma.messages.create({ data: {...req.body,content:censored_content, user_id: req.user.id_user,url_file:relativeFilePath,channel_id:+req.body.channel_id } });
+        const message_sent = await prisma.messages.create({ data: {...req.body,content:censored_content, user_id: req.user.id_user,url_file:relativeFilePath,channel_id:+req.body.channel_id,created_at:date_time } });
         const response = {
             ...message_sent,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
