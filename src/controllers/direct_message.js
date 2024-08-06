@@ -55,7 +55,7 @@ export const get_conversations = async (id_user) => {
                 unique_pairs[key2] = true;
                 const isSender = message.send_id === id_user;
                 const adjustedMessage = {
-                    content: message.content,send_id: message.send_id,recipient_id: message.recipient_id,
+                    content: message.content,send_id: message.send_id,recipient_id: message.recipient_id,date:message.created_at,
                     user_send: isSender 
                         ? {
                             full_name: message.users_send.full_name,network_user: message.users_send.network_user,id_user: message.send_id
@@ -64,7 +64,7 @@ export const get_conversations = async (id_user) => {
                         },
                     user_recipient: isSender 
                         ? {
-                            full_name: message.users_receive.full_name,network_user: message.users_receive.network_user,id_user: message.recipient_id 
+                            full_name: message.users_receive.full_name,network_user: message.users_receive.network_user,photo_url:users_receive.photo_url,id_user: message.recipient_id 
                         }: {
                             full_name: message.users_send.full_name, network_user: message.users_send.network_user,id_user: message.send_id
                         }
