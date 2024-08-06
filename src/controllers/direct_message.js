@@ -66,7 +66,7 @@ export const get_conversations = async (id_user) => {
                         ? {
                             full_name: message.users_receive.full_name,network_user: message.users_receive.network_user,photo_url:message.users_receive.photo_url,id_user: message.recipient_id 
                         }: {
-                            full_name: message.users_send.full_name, network_user: message.users_send.network_user,photo_url:message.users_receive.photo_url,id_user: message.send_id
+                            full_name: message.users_send.full_name, network_user: message.users_send.network_user,photo_url:message.users_send.photo_url,id_user: message.send_id
                         }
                 };
                 unique_messages.push(adjustedMessage);
