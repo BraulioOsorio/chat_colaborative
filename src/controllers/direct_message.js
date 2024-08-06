@@ -42,7 +42,7 @@ export const get_conversations = async (id_user) => {
             orderBy: {created_at: 'desc'},
             distinct: ['send_id', 'recipient_id'],
             select: {
-                send_id: true, recipient_id: true,content:true,users_send: { select: { full_name: true, network_user: true,photo_url:true } },users_receive: { select: { full_name: true, network_user: true,photo_url:true } }
+                send_id: true, recipient_id: true,content:true,created_at:true,users_send: { select: { full_name: true, network_user: true,photo_url:true } },users_receive: { select: { full_name: true, network_user: true,photo_url:true } }
             }
         });
         const unique_messages = [];
