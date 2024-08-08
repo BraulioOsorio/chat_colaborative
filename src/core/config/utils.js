@@ -4,7 +4,6 @@ import { SECRET_KEY } from './config.js';
 import {validationResult} from "express-validator";
 import { register_token } from '../../controllers/tokens.js';
 import { DateTime } from 'luxon';
-
 export const get_current_datetime = () => {
     let now = DateTime.now().setZone('America/Bogota').toFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     return now;

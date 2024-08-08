@@ -6,14 +6,16 @@ import cors_config from "./core/config/cors_config.js";
 import { cors_socket } from "./core/config/cors_socket.js";
 import { PORT } from "./core/config/config.js";
 import {initialize_web_socket} from './websocket.js';
+import path from 'path';
 
 const app = express();
 const server = create_server(app);
-
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(cors_config);
 app.use('/collaborative_chat', root_router);
+
 
 initialize_web_socket(server, cors_socket);
 
