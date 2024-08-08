@@ -2,23 +2,27 @@ import { get_current_datetime } from '../core/config/utils.js';
 import { prisma } from '../core/db/index.js';
 import { group_deletion_information } from './history_maintenances.js';
 import { io } from '../websocket.js';
-import upload from '../middlewares/authenticate_token.js';
-
+import { uploadMiddleware, uploadFileToSupabase } from '../middlewares/authenticate_token.js';
+import { STORAGE_URL } from '../core/config/config.js';
 export const create_channel = async (req,res) => {
     try {
         await new Promise((resolve, reject) => {
-            upload.single('file')(req, res, (err) => {
-                if (err) {return reject(err);}
+            uploadMiddleware.single('file')(req, res, (err) => { 
+                if (err) { return reject(err); }
                 resolve();
             });
         });
         const file = req.file;
-        const relativeFilePath = file ? `https://intern-chat-backend-production-uy3j.onrender.com/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
+        let storage = null
+        if (file) {
+            const relativeFilePath = await uploadFileToSupabase(file)
+            storage = `${STORAGE_URL}${relativeFilePath}`
+        }
         let date_time = get_current_datetime()
         if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })};
         const { name, description, user_ids } = req.body;
         const all_user_ids = [req.user.id_user, ...user_ids];
-        const new_channel = await prisma.channels.create({data: { name, description,created_at:date_time,image_channel:relativeFilePath }});
+        const new_channel = await prisma.channels.create({data: { name, description,created_at:date_time,image_channel:storage }});
         const user_channels_data = all_user_ids.map(user_id => ({user_id,channel_id: new_channel.id_channel}));
         await prisma.users_channels.createMany({data: user_channels_data});
         return res.json(new_channel);
@@ -113,11 +117,17 @@ export const get_messages = async (channelId,user) => {
 export const send_message = async (req,res) => {
     try {
         await new Promise((resolve, reject) => {
-            upload.single('file')(req, res, (err) => {
-                if (err) {return reject(err);}
+            uploadMiddleware.single('file')(req, res, (err) => { 
+                if (err) { return reject(err); }
                 resolve();
             });
         });
+        const file = req.file;
+        let storage = null
+        if (file) {
+            const relativeFilePath = await uploadFileToSupabase(file)
+            storage = `${STORAGE_URL}${relativeFilePath}`
+        }
         let date_time = get_current_datetime()
         const user_channel = await prisma.users_channels.findFirst({ where: { user_id: req.user.id_user, channel_id: +req.body.channel_id } });
         if (!user_channel){return res.status(401).json({ error: 'El usuario no pertenece al canal' })};
@@ -130,10 +140,8 @@ export const send_message = async (req,res) => {
             return content.split(' ').map(word => {return vulgar_words_set.has(word.toLowerCase()) ? '*'.repeat(word.length) : word;
             }).join(' ');
         };
-        const file = req.file;
-        const relativeFilePath = file ? `https://intern-chat-backend-production-uy3j.onrender.com/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
         const censored_content = censor_message(req.body.content);
-        const message_sent = await prisma.messages.create({ data: {...req.body,content:censored_content, user_id: req.user.id_user,url_file:relativeFilePath,channel_id:+req.body.channel_id,created_at:date_time } });
+        const message_sent = await prisma.messages.create({ data: {...req.body,content:censored_content, user_id: req.user.id_user,url_file:storage,channel_id:+req.body.channel_id,created_at:date_time } });
         const response = {
             ...message_sent,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };

@@ -3,7 +3,8 @@ import { get_current_datetime } from '../core/config/utils.js';
 import { io } from '../websocket.js';
 import { create_room_key } from '../core/config/utils.js';
 import { get_direct_messages } from '../core/checks/validations_direct_messages.js';
-import upload from '../middlewares/authenticate_token.js';
+import { uploadMiddleware, uploadFileToSupabase } from '../middlewares/authenticate_token.js';
+import { STORAGE_URL } from '../core/config/config.js';
 export const delete_message = async (req, res) => {
     try {
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.params.id } })
@@ -82,17 +83,20 @@ export const get_conversations = async (id_user) => {
 export const create_conversation = async (req, res) => {
     try {
         await new Promise((resolve, reject) => {
-            upload.single('file')(req, res, (err) => {
-                if (err) {return reject(err);}
+            uploadMiddleware.single('file')(req, res, (err) => { 
+                if (err) { return reject(err); }
                 resolve();
             });
         });
-    
         const file = req.file;
-        const relativeFilePath = file ? `https://intern-chat-backend-production-uy3j.onrender.com/uploads/${file.mimetype.startsWith('image/') ? 'images' : 'documents'}/${file.filename}` : null;
+        let storage = null
+        if (file) {
+            const relativeFilePath = await uploadFileToSupabase(file)
+            storage = `${STORAGE_URL}${relativeFilePath}`
+        }
         let date_time = get_current_datetime()
         const get_messages_validator_exist = await get_messages_conversation(req.user.id_user, req.user.id_user, req.body.recipient_id)
-        const conversation = await prisma.direct_message.create({ data: { ...req.body, send_id: req.user.id_user, created_at: date_time,url_file: relativeFilePath} });
+        const conversation = await prisma.direct_message.create({ data: { ...req.body, send_id: req.user.id_user, created_at: date_time,url_file: storage} });
         const response = {
             ...conversation,user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
