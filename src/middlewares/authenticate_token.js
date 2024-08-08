@@ -4,7 +4,6 @@ import { SECRET_KEY, SUPABASE_KEY, SUPABASE_URL } from '../core/config/config.js
 import { create_access_token } from '../core/config/utils.js';
 import tokens from '../controllers/tokens.js'
 import multer from 'multer';
-import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -25,9 +24,6 @@ export const uploadFileToSupabase = async (file) => {
   }
   return fileName;
 };
-
-
-
 export const authenticate_token = async (req, res, next) => {
   const auth_header = req.headers['authorization'];
   const token = auth_header && auth_header.split(' ')[1];
