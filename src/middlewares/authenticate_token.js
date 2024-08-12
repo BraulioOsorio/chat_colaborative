@@ -11,18 +11,28 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const upload = multer({
   storage: multer.memoryStorage(),
 });
-export const uploadFileToSupabase = async (file) => {
-  const fileName = `${uuidv4()}_${file.originalname}`;
+export const upload_file_to_supabase = async (file) => {
+  const file_name = `${uuidv4()}_${file.originalname}`;
   const { data, error } = await supabase.storage
       .from('Storage Chat Internal')
-      .upload(fileName, file.buffer, {
+      .upload(file_name, file.buffer, {
           contentType: file.mimetype,
           upsert: false,
       });
   if (error) {
       throw new Error(error.message);
   }
-  return fileName;
+  return file_name;
+};
+export const delete_file_from_supabase = async (file_name) => {
+  try {
+    const { error } = await supabase.storage
+      .from('Storage Chat Internal') 
+      .remove([file_name]);
+    if (error) {throw new Error(`Error deleting file: ${error.message}`)}
+  } catch (error) {
+    console.error('Error deleting file:', error.message);
+  }
 };
 export const authenticate_token = async (req, res, next) => {
   const auth_header = req.headers['authorization'];
@@ -83,6 +93,6 @@ export const authenticate_token_messages = async (req,res,next) => {
   });
 };
 
-export const uploadMiddleware = upload;
+export const upload_middleware = upload;
 
 export default upload;

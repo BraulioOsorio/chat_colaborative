@@ -1,13 +1,13 @@
-import { get_current_datetime } from '../core/config/utils.js';
+import { extract_file_name, get_current_datetime } from '../core/config/utils.js';
 import { prisma } from '../core/db/index.js';
 import { group_deletion_information } from './history_maintenances.js';
 import { io } from '../websocket.js';
-import { uploadMiddleware, uploadFileToSupabase } from '../middlewares/authenticate_token.js';
+import { upload_middleware, upload_file_to_supabase,delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
 export const create_channel = async (req,res) => {
     try {
         await new Promise((resolve, reject) => {
-            uploadMiddleware.single('file')(req, res, (err) => { 
+            upload_middleware.single('file')(req, res, (err) => { 
                 if (err) { return reject(err); }
                 resolve();
             });
@@ -15,8 +15,8 @@ export const create_channel = async (req,res) => {
         const file = req.file;
         let storage = null
         if (file) {
-            const relativeFilePath = await uploadFileToSupabase(file)
-            storage = `${STORAGE_URL}${relativeFilePath}`
+            const relative_file_path = await upload_file_to_supabase(file)
+            storage = `${STORAGE_URL}${relative_file_path}`
         }
         let date_time = get_current_datetime()
         if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })};
@@ -61,6 +61,7 @@ export const delete_channel = async (req, res) => {
         if (!is_user_in_channel) {return res.status(403).json({ error: 'User does not have access to this channel' })};
         await prisma.users_channels.deleteMany({where:{channel_id:+req.params.id } })
         const channel_delete = await prisma.channels.update({where:{ id_channel:+req.params.id},data:{status_channel: false}})
+        await delete_file_from_supabase(extract_file_name(channel_delete.image_channel))
         await group_deletion_information(`Canal borrado: ${channel_delete.name} `,req.user.id_user)
         return res.json(channel_delete)
     } catch (error) {
@@ -117,7 +118,7 @@ export const get_messages = async (channelId,user) => {
 export const send_message = async (req,res) => {
     try {
         await new Promise((resolve, reject) => {
-            uploadMiddleware.single('file')(req, res, (err) => { 
+            upload_middleware.single('file')(req, res, (err) => { 
                 if (err) { return reject(err); }
                 resolve();
             });
@@ -125,8 +126,8 @@ export const send_message = async (req,res) => {
         const file = req.file;
         let storage = null
         if (file) {
-            const relativeFilePath = await uploadFileToSupabase(file)
-            storage = `${STORAGE_URL}${relativeFilePath}`
+            const relative_file_path = await upload_file_to_supabase(file)
+            storage = `${STORAGE_URL}${relative_file_path}`
         }
         let date_time = get_current_datetime()
         const user_channel = await prisma.users_channels.findFirst({ where: { user_id: req.user.id_user, channel_id: +req.body.channel_id } });
@@ -185,6 +186,7 @@ export const delete_message = async (req,res) => {
             ...message_delete,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         io.to(message_delete.channel_id).emit('delete_message_channel', response);
+        await delete_file_from_supabase(extract_file_name(message_delete.url_file))
         return res.json(message_delete);
     } catch (error) {
         console.error('Error delete_message:', error);

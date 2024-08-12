@@ -1,14 +1,14 @@
 import { prisma } from '../core/db/index.js';
 import {hashSync} from 'bcrypt';
 import { validate_role } from '../core/checks/validations_users.js';
-import { generate_user_id } from '../core/config/utils.js';
-import { uploadMiddleware, uploadFileToSupabase } from '../middlewares/authenticate_token.js';
+import { extract_file_name, generate_user_id } from '../core/config/utils.js';
+import { upload_middleware, upload_file_to_supabase, delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
 
 export const create_user = async (req, res) => {
     let id_rol = null;
     await new Promise((resolve, reject) => {
-        uploadMiddleware.single('file')(req, res, (err) => { 
+        upload_middleware.single('file')(req, res, (err) => { 
             if (err) { return reject(err); }
             resolve();
         });
@@ -16,8 +16,8 @@ export const create_user = async (req, res) => {
     const file = req.file;
     let storage = null
     if (file) {
-        const relativeFilePath = await uploadFileToSupabase(file)
-        storage = `${STORAGE_URL}${relativeFilePath}`
+        const relative_file_path = await upload_file_to_supabase(file)
+        storage = `${STORAGE_URL}${relative_file_path}`
     }
     try {
         if (req.user.role.name === "ADMIN") {
@@ -126,7 +126,8 @@ export const delete_user = async (req, res) => {
         if (!find_user_proccess || !find_user_proccess.id_user) {return find_user_proccess}
         let id_user_delete = find_user_proccess.id_user;
         let user_status = find_user_proccess.status_user;
-        const user_delete = await prisma.users.update({ where: { id_user: id_user_delete }, data: { status_user: user_status = user_status ? false : true } });;
+        const user_delete = await prisma.users.update({ where: { id_user: id_user_delete }, data: { status_user: user_status = user_status ? false : true } });
+        await delete_file_from_supabase(extract_file_name(user_delete.photo_url))
         return res.json(user_delete)
     } catch (error) {
         console.error('Error delete user:', error);

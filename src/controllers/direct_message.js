@@ -1,9 +1,9 @@
 import { prisma } from '../core/db/index.js';
-import { get_current_datetime } from '../core/config/utils.js';
+import { extract_file_name, get_current_datetime } from '../core/config/utils.js';
 import { io } from '../websocket.js';
 import { create_room_key } from '../core/config/utils.js';
 import { get_direct_messages } from '../core/checks/validations_direct_messages.js';
-import { uploadMiddleware, uploadFileToSupabase } from '../middlewares/authenticate_token.js';
+import { upload_middleware, upload_file_to_supabase, delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
 export const delete_message = async (req, res) => {
     try {
@@ -12,6 +12,7 @@ export const delete_message = async (req, res) => {
         let message_deleted = await prisma.direct_message.delete({ where: { id_direct_message: +req.params.id } })
         const room_key = create_room_key(message_deleted.send_id, message_deleted.recipient_id)
         io.to(room_key).emit('conversation_delete_direct', message_deleted);
+        await delete_file_from_supabase(extract_file_name(message_deleted.url_file))
         res.json(message_deleted)
     } catch (error) {
         console.error('Error:', error);
@@ -83,7 +84,7 @@ export const get_conversations = async (id_user) => {
 export const create_conversation = async (req, res) => {
     try {
         await new Promise((resolve, reject) => {
-            uploadMiddleware.single('file')(req, res, (err) => { 
+            upload_middleware.single('file')(req, res, (err) => { 
                 if (err) { return reject(err); }
                 resolve();
             });
@@ -91,8 +92,8 @@ export const create_conversation = async (req, res) => {
         const file = req.file;
         let storage = null
         if (file) {
-            const relativeFilePath = await uploadFileToSupabase(file)
-            storage = `${STORAGE_URL}${relativeFilePath}`
+            const relative_file_path = await upload_file_to_supabase(file)
+            storage = `${STORAGE_URL}${relative_file_path}`
         }
         let date_time = get_current_datetime()
         const get_messages_validator_exist = await get_messages_conversation(req.user.id_user, req.user.id_user, req.body.recipient_id)

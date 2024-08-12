@@ -30,5 +30,10 @@ export function create_room_key(id1, id2) {
     const sortedIds = [id1, id2].sort();
     return `${sortedIds[0]}_${sortedIds[1]}`;
 }
+export function extract_file_name(url) {
+    const last_segment = url.split('Internal/')[1]; 
+    const file_name = last_segment ? last_segment.split('/').pop() : null;
+    return decodeURIComponent(file_name);
+}
 
 export default {generate_user_id,create_access_token};
