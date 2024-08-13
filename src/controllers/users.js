@@ -14,7 +14,7 @@ export const create_user = async (req, res) => {
         });
     });
     const file = req.file;
-    let storage = "https://oaywoxchdfphlozkwgwx.supabase.co/storage/v1/object/public/Storage%20Chat%20Internal/default.png"
+    let storage = `${STORAGE_URL}default.png`
     if (file) {
         const relative_file_path = await upload_file_to_supabase(file)
         storage = `${STORAGE_URL}${relative_file_path}`
@@ -128,7 +128,7 @@ export const delete_user = async (req, res) => {
         let user_status = find_user_proccess.status_user;
         const user_delete = await prisma.users.update({ where: { id_user: id_user_delete }, data: { status_user: user_status = user_status ? false : true } });
         await delete_file_from_supabase(extract_file_name(user_delete.photo_url))
-        if (user_delete.photo_url != null){await delete_file_from_supabase(extract_file_name(user_delete.photo_url))}
+        if (user_delete.photo_url != null || user_delete.photo_url != `${STORAGE_URL}default.png`){await delete_file_from_supabase(extract_file_name(user_delete.photo_url))}
         return res.json(user_delete)
     } catch (error) {
         console.error('Error delete user:', error);

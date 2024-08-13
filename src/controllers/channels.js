@@ -13,7 +13,7 @@ export const create_channel = async (req,res) => {
             });
         });
         const file = req.file;
-        let storage = "https://oaywoxchdfphlozkwgwx.supabase.co/storage/v1/object/public/Storage%20Chat%20Internal/default.png"
+        let storage = `${STORAGE_URL}default.png`
         if (file) {
             const relative_file_path = await upload_file_to_supabase(file)
             storage = `${STORAGE_URL}${relative_file_path}`
@@ -186,7 +186,7 @@ export const delete_message = async (req,res) => {
             ...message_delete,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         io.to(message_delete.channel_id).emit('delete_message_channel', response);
-        if (message_delete.url_file != null){await delete_file_from_supabase(extract_file_name(message_delete.url_file))}
+        if (message_delete.url_file != null || message_delete.url_file != `${STORAGE_URL}default.png`){await delete_file_from_supabase(extract_file_name(message_delete.url_file))}
         return res.json(message_delete);
     } catch (error) {
         console.error('Error delete_message:', error);
