@@ -12,7 +12,7 @@ export const delete_message = async (req, res) => {
         let message_deleted = await prisma.direct_message.delete({ where: { id_direct_message: +req.params.id } })
         const room_key = create_room_key(message_deleted.send_id, message_deleted.recipient_id)
         io.to(room_key).emit('conversation_delete_direct', message_deleted);
-        await delete_file_from_supabase(extract_file_name(message_deleted.url_file))
+        if (message_deleted.url_file != null){await delete_file_from_supabase(extract_file_name(message_deleted.url_file))}
         res.json(message_deleted)
     } catch (error) {
         console.error('Error:', error);

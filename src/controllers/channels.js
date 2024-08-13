@@ -13,7 +13,7 @@ export const create_channel = async (req,res) => {
             });
         });
         const file = req.file;
-        let storage = null
+        let storage = "https://oaywoxchdfphlozkwgwx.supabase.co/storage/v1/object/public/Storage%20Chat%20Internal/default.png"
         if (file) {
             const relative_file_path = await upload_file_to_supabase(file)
             storage = `${STORAGE_URL}${relative_file_path}`
@@ -61,7 +61,7 @@ export const delete_channel = async (req, res) => {
         if (!is_user_in_channel) {return res.status(403).json({ error: 'User does not have access to this channel' })};
         await prisma.users_channels.deleteMany({where:{channel_id:+req.params.id } })
         const channel_delete = await prisma.channels.update({where:{ id_channel:+req.params.id},data:{status_channel: false}})
-        await delete_file_from_supabase(extract_file_name(channel_delete.image_channel))
+        if (channel_delete.image_channel != null){await delete_file_from_supabase(extract_file_name(channel_delete.image_channel))}
         await group_deletion_information(`Canal borrado: ${channel_delete.name} `,req.user.id_user)
         return res.json(channel_delete)
     } catch (error) {
@@ -186,7 +186,7 @@ export const delete_message = async (req,res) => {
             ...message_delete,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         io.to(message_delete.channel_id).emit('delete_message_channel', response);
-        await delete_file_from_supabase(extract_file_name(message_delete.url_file))
+        if (message_delete.url_file != null){await delete_file_from_supabase(extract_file_name(message_delete.url_file))}
         return res.json(message_delete);
     } catch (error) {
         console.error('Error delete_message:', error);
