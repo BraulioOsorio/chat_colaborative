@@ -5,6 +5,7 @@ import { create_room_key } from '../core/config/utils.js';
 import { get_direct_messages } from '../core/checks/validations_direct_messages.js';
 import { upload_middleware, upload_file_to_supabase, delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
+import { differenceInMinutes } from 'date-fns';
 export const delete_message = async (req, res) => {
     try {
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.params.id } })
@@ -22,9 +23,12 @@ export const delete_message = async (req, res) => {
 
 export const update_message = async (req, res) => {
     try {
+        let date_time = get_current_datetime()
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.body.id_direct_message } })
-        if (!direct_message) {return res.status(401).json({ error: 'The message with this ID does not exist ' });}
+        if (!direct_message) {return res.status(401).json({ error: 'El mensage no existe' });}
         if (req.user.id_user !== direct_message.send_id){return res.status(401).json({ error: 'El usuario no tiene permisos ' })};
+        const minutes_Difference = differenceInMinutes(date_time, new Date(direct_message.created_at));
+        if(minutes_Difference > 20){return res.status(401).json({ status: false,msg:"Tiempo para Actualización agotado" })}
         let message_updated = await prisma.direct_message.update({ where: { id_direct_message: +req.body.id_direct_message }, data: req.body })
         const room_key = create_room_key(message_updated.send_id, message_updated.recipient_id)
         const response = {
@@ -118,6 +122,7 @@ export const create_conversation = async (req, res) => {
 export const get_messages_conversation = async (id_user, send_id, recipient_id) => {
     try {
         await get_direct_messages(send_id,recipient_id)
+        let date_time = get_current_datetime()
         const conversation_messages = await prisma.direct_message.findMany({
             where: {
                 OR: [
@@ -131,7 +136,11 @@ export const get_messages_conversation = async (id_user, send_id, recipient_id) 
             }
         });
         if (!conversation_messages){return { error: 'Error al obtener los mensajes de la conversacion' }}
-        const result = conversation_messages.map(message => ({ ...message, position: message.send_id === id_user ? 'right' : 'left' }))
+        const result = conversation_messages.map(message => {
+            const minutes_Difference = differenceInMinutes(date_time, new Date(message.created_at));
+            return {...message,position: message.send_id === id_user ? 'right' : 'left',recent: minutes_Difference <= 20
+            };
+        });
         return result
     } catch (error) {
         console.error('Error get_messages_conversation:', error);

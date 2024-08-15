@@ -4,6 +4,7 @@ import { group_deletion_information } from './history_maintenances.js';
 import { io } from '../websocket.js';
 import { upload_middleware, upload_file_to_supabase,delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
+import { differenceInMinutes } from 'date-fns';
 export const create_channel = async (req,res) => {
     try {
         await new Promise((resolve, reject) => {
@@ -60,6 +61,7 @@ export const delete_channel = async (req, res) => {
         const is_user_in_channel = find_user_admin.some(channel => channel.id_channel === +req.params.id);
         if (!is_user_in_channel) {return res.status(403).json({ error: 'User does not have access to this channel' })};
         await prisma.users_channels.deleteMany({where:{channel_id:+req.params.id } })
+        await prisma.messages.deleteMany({where:{channel_id:+req.params.id } })
         const channel_delete = await prisma.channels.update({where:{ id_channel:+req.params.id},data:{status_channel: false}})
         if (channel_delete.image_channel != null){await delete_file_from_supabase(extract_file_name(channel_delete.image_channel))}
         await group_deletion_information(`Canal borrado: ${channel_delete.name} `,req.user.id_user)
@@ -96,17 +98,21 @@ export const get_channel_users = async (req, res) => {
 
 export const get_messages = async (channelId,user) => {
     try {
+        let date_time = get_current_datetime()
         const channel_messages = await prisma.channels.findUnique({
           where: { id_channel: +channelId },
           select: { id_channel: true, name: true, description: true, messages: { select: { id_message: true, user_id: true, content: true, url_file: true, type_message: true, created_at: true, users: { select: { full_name: true,photo_url:true,id_user:true } } }, orderBy: { created_at: 'asc' } } }
         });
         if (!channel_messages) {return { error: 'El canal con este ID no existe' };}
         if (channel_messages.messages.length == 0) { return { error: 'No hay mensajes disponibles en este canal' };}
-        const formatted_essages = channel_messages.messages.map(message => ({
-            ...message,position: message.user_id === user.id_user ? 'right' : 'left'
-          }));
+        const formatted_messages = channel_messages.messages.map(message => {
+        const minutes_Difference = differenceInMinutes(date_time, new Date(message.created_at));
+        return {
+            ...message,position: message.user_id === user.id_user ? 'right' : 'left',recent: minutes_Difference <= 20
+        };
+        });
           const result = {
-            ...channel_messages, messages: formatted_essages
+            ...channel_messages, messages: formatted_messages
           };  
         return result;
     } catch (error) {
@@ -156,8 +162,11 @@ export const send_message = async (req,res) => {
 
 export const edit_message = async (req,res) => {
     try {
+        let date_time = get_current_datetime()
         const user_message = await prisma.messages.findUnique({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
         if (!user_message){return res.status(401).json({ status: false,msg:"no tiene permisos de editar otro msg " })};
+        const minutes_Difference = differenceInMinutes(date_time, new Date(user_message.created_at));
+        if(minutes_Difference > 20){return res.status(401).json({ status: false,msg:"Tiempo para actualización agotado" })}
         const vulgar_words = await prisma.vulgar_words.findMany();
         const vulgar_words_set = new Set(vulgar_words.map(vw => vw.word.toLowerCase()));
         const censor_message = (content) => {
@@ -179,8 +188,11 @@ export const edit_message = async (req,res) => {
 
 export const delete_message = async (req,res) => {
     try {
+        let date_time = get_current_datetime()
         const user_message = await prisma.messages.findUnique({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
         if (!user_message) {return res.status(401).json({ status: false,msg:"no tiene permisos de borrar otro msg " })};
+        const minutes_Difference = differenceInMinutes(date_time, new Date(user_message.created_at));
+        if(minutes_Difference > 20){return res.status(401).json({ status: false,msg:"Tiempo para eliminación agotado" })}
         const message_delete = await prisma.messages.delete({where:{id_message:+req.body.id_message}})
         const response = {
             ...message_delete,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
