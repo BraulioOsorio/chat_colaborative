@@ -141,7 +141,10 @@ export const get_messages_conversation = async (id_user, send_id, recipient_id) 
             return {...message,position: message.send_id === id_user ? 'right' : 'left',recent: minutes_Difference <= 20
             };
         });
+        console.log(result);
+        
         return result
+        
     } catch (error) {
         console.error('Error get_messages_conversation:', error);
         return { 'error': 'internal Server error get_messages_conversation' }
