@@ -10,6 +10,8 @@ export const delete_message = async (req, res) => {
     try {
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.params.id } })
         if (req.user.id_user !== direct_message.send_id){return res.status(401).json({ error: 'El usuario no tiene permisos ' })};
+        const minutes_Difference = differenceInMinutes(date_time, new Date(direct_message.created_at));
+        if(minutes_Difference > 20){return res.status(401).json({ status: false,msg:"Tiempo para Actualización agotado" })}
         let message_deleted = await prisma.direct_message.delete({ where: { id_direct_message: +req.params.id } })
         const room_key = create_room_key(message_deleted.send_id, message_deleted.recipient_id)
         io.to(room_key).emit('conversation_delete_direct', message_deleted);
@@ -141,8 +143,6 @@ export const get_messages_conversation = async (id_user, send_id, recipient_id) 
             return {...message,position: message.send_id === id_user ? 'right' : 'left',recent: minutes_Difference <= 20
             };
         });
-        console.log(result);
-        
         return result
         
     } catch (error) {
