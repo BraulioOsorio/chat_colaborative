@@ -144,7 +144,6 @@ export const get_messages_conversation = async (id_user, send_id, recipient_id) 
             };
         });
         return result
-        
     } catch (error) {
         console.error('Error get_messages_conversation:', error);
         return { 'error': 'internal Server error get_messages_conversation' }

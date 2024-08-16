@@ -129,18 +129,22 @@ export const send_message = async (req,res) => {
                 resolve();
             });
         });
+        const permissions_names = req.user.role_permission.map(rp => rp.Permissions.name);
+        if (!permissions_names.includes("ENVIAR_MENSAJE") && req.user.role.name == "AGENTE")
+            return res.status(401).json({ error: 'No tiene permisos de enviar mensajes' });
         const file = req.file;
         let storage = null
         if (file) {
+            if(!permissions_names.includes("ENVIAR_DOCUMENTO") && req.user.role.name == "AGENTE")
+                return res.status(401).json({ error: 'No tiene permisos de enviar mensajes' });
+            
             const relative_file_path = await upload_file_to_supabase(file)
             storage = `${STORAGE_URL}${relative_file_path}`
         }
+
         let date_time = get_current_datetime()
         const user_channel = await prisma.users_channels.findFirst({ where: { user_id: req.user.id_user, channel_id: +req.body.channel_id } });
         if (!user_channel){return res.status(401).json({ error: 'El usuario no pertenece al canal' })};
-        const permissions_names = req.user.role_permission.map(rp => rp.Permissions.name);
-        if (!permissions_names.includes("ENVIAR_MENSAJE") && req.user.role.name == "AGENTE")
-            return res.status(401).json({ error: 'No tiene permisos' });
         const vulgar_words = await prisma.vulgar_words.findMany();
         const vulgar_words_set = new Set(vulgar_words.map(vw => vw.word.toLowerCase()));
         const censor_message = (content) => {
