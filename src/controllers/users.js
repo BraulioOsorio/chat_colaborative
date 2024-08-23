@@ -92,7 +92,7 @@ export const find_user = async (req, res) => {
 export const find_user_name = async (req, res) => {
     try {
         const user = await prisma.users.findFirst({ where: { network_user: {contains: req.params.network_user,mode: 'insensitive'} } });
-        if (!user) {return 'Usuario no encontrado'}
+        if (!user) {return res.json({"status":false,"msg":"no encontrado"}) }
         res.json(user);
     } catch (error) {
         console.error('Error find user:', error);
