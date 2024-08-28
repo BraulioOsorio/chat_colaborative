@@ -65,21 +65,28 @@ export const authenticate_token = async (req, res, next) => {
   });
 };
 
+
 export const authenticate_token_messages = async (req,res,next) => {
   let message = null;
-  let status = null
+  let status = true;
   const auth_header = req.headers['authorization'];
   const token = auth_header && auth_header.split(' ')[1];
-  if (!token) {message = 'Token no proporcionado';status = false}
+  if (!token) {
+    message = 'Token no proporcionado';
+    status = false;
+    return next('Token no proporcionado');
+  }
   jwt.verify(token, SECRET_KEY, async (err, decoded) => {
     if (err) {
       if (err.name === 'TokenExpiredError') {
         await tokens.delete_token(token);
         message = 'Token expirado';
         status = false;
+        return next('Token expirado');
       } else {
         message = 'Token inválido';
         status = false;
+        return next('Token inválido');
       }
     }
     const now = Math.floor(Date.now() / 1000);
