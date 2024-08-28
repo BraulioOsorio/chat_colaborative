@@ -78,7 +78,7 @@ export const authenticate_token_messages = async (req,res,next) => {
   }
   jwt.verify(token, SECRET_KEY, async (err, decoded) => {
     if (err) {
-      if (err.name === 'TokenExpiredError') {
+      if (err.name === 'TokenExpiredError') { 
         await tokens.delete_token(token);
         message = 'Token expirado';
         status = false;
@@ -107,5 +107,4 @@ export const authenticate_token_messages = async (req,res,next) => {
 };
 
 export const upload_middleware = upload;
-
 export default upload;
