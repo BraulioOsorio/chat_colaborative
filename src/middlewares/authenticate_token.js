@@ -67,18 +67,15 @@ export const authenticate_token = async (req, res, next) => {
 
 
 export const authenticate_token_messages = async (req,res,next) => {
-  const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
   let message = null;
   let status = true;
   const auth_header = req.headers['authorization'];
   const token = auth_header && auth_header.split(' ')[1];
   if (!token) {
-    message = 'Token no proporcionado';
-    status = false;
-    if ( !status ){user.TokenExpired = {message : message,status: status}}
-    return next(null, user);
+    return next('token no proporcinado');
   }
   jwt.verify(token, SECRET_KEY, async (err, decoded) => {
+    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
     if (err) {
       if (err.name === 'TokenExpiredError') { 
         await tokens.delete_token(token);
