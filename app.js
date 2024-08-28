@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const messagesDiv = document.getElementById('messages');
     const tokenInfoDiv = document.getElementById('tokenInfo');
 
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiYzFhOWY0NWEtNDUyMS00IiwiaWF0IjoxNzI0ODUxODUxLCJleHAiOjE3MjQ4NTIyMTF9.EYPpEL3a2_rOGYMmXTODfnlDM7WMbf9S9ZeG9pEQwPc'; // Reemplaza con el token JWT válido
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiYzFhOWY0NWEtNDUyMS00IiwiaWF0IjoxNzI0ODUzODgxLCJleHAiOjE3MjQ4NTQyNDF9.VFxJUTHHOpg8DNQYAxrkaETSOSxqOMPvIKxfm3FPnwg'; // Reemplaza con el token JWT válido
     const userId = 'c1a9f45a-4521-4'; // Reemplaza con el ID del usuario
     const recipientId = "413553d5-03a1-4"; // Reemplaza con el ID del destinatario
 

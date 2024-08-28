@@ -74,6 +74,7 @@ export const authenticate_token_messages = async (req,res,next) => {
       if (err.name === 'TokenExpiredError') {
         await tokens.delete_token(token);
         return next('Token expirado');
+        user.TokenExpired = true;
       } else {
         return next('Token inválido');
       }
