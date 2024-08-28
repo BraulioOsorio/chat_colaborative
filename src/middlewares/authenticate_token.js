@@ -67,6 +67,7 @@ export const authenticate_token = async (req, res, next) => {
 
 
 export const authenticate_token_messages = async (req,res,next) => {
+  const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
   let message = null;
   let status = true;
   const auth_header = req.headers['authorization'];
@@ -74,7 +75,8 @@ export const authenticate_token_messages = async (req,res,next) => {
   if (!token) {
     message = 'Token no proporcionado';
     status = false;
-    return next('Token no proporcionado');
+    if ( !status ){user.TokenExpired = {message : message,status: status}}
+    return next(null, user);
   }
   jwt.verify(token, SECRET_KEY, async (err, decoded) => {
     if (err) {
@@ -82,16 +84,17 @@ export const authenticate_token_messages = async (req,res,next) => {
         await tokens.delete_token(token);
         message = 'Token expirado';
         status = false;
-        return next('Token expirado');
+        if ( !status ){user.TokenExpired = {message : message,status: status}}
+        return next(null, user);
       } else {
         message = 'Token inválido';
         status = false;
-        return next('Token inválido');
+        if ( !status ){user.TokenExpired = {message : message,status: status}}
+        return next(null, user);
       }
     }
     const now = Math.floor(Date.now() / 1000);
     const time_until_expiration = decoded.exp - now;
-    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
     if ( time_until_expiration >=0 && time_until_expiration <= 5 * 60) { 
       const token_new = create_access_token(user.id_user,false);
       await tokens.update_token(token,token_new);
@@ -101,7 +104,7 @@ export const authenticate_token_messages = async (req,res,next) => {
       const errorMessage = !user ? 'Usuario no encontrado' : 'Usuario inactivo';
       return next(errorMessage);
     }
-    if ( !status ){user.TokenExpired = {message : message,status: status}}
+    
     return next(null, user); 
   });
 };
