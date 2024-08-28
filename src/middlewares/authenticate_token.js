@@ -67,31 +67,21 @@ export const authenticate_token = async (req, res, next) => {
 
 
 export const authenticate_token_messages = async (req,res,next) => {
-  let message = null;
-  let status = true;
   const auth_header = req.headers['authorization'];
   const token = auth_header && auth_header.split(' ')[1];
-  if (!token) {
-    return next('token no proporcinado');
-  }
+  if (!token) {return next('Token no proporcionado')}
   jwt.verify(token, SECRET_KEY, async (err, decoded) => {
-    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
     if (err) {
-      if (err.name === 'TokenExpiredError') { 
+      if (err.name === 'TokenExpiredError') {
         await tokens.delete_token(token);
-        message = 'Token expirado';
-        status = false;
-        if ( !status ){user.TokenExpired = {message : message,status: status}}
-        return next(null, user);
+        return next('Token expirado');
       } else {
-        message = 'Token inválido';
-        status = false;
-        if ( !status ){user.TokenExpired = {message : message,status: status}}
-        return next(null, user);
+        return next('Token inválido');
       }
     }
     const now = Math.floor(Date.now() / 1000);
     const time_until_expiration = decoded.exp - now;
+    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
     if ( time_until_expiration >=0 && time_until_expiration <= 5 * 60) { 
       const token_new = create_access_token(user.id_user,false);
       await tokens.update_token(token,token_new);
@@ -101,7 +91,6 @@ export const authenticate_token_messages = async (req,res,next) => {
       const errorMessage = !user ? 'Usuario no encontrado' : 'Usuario inactivo';
       return next(errorMessage);
     }
-    
     return next(null, user); 
   });
 };
