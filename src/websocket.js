@@ -15,6 +15,7 @@ const initialize_web_socket  = (server, cors_socket) => {
             try {
                 authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (error, user) => {
                     if (error) {return socket.emit('error', { message: error })}
+                    socket.join(user.id_user);
                     const result = await get_messages(channelId, user);
                     if (result.error) {
                         socket.emit('error', { message: result.error });
@@ -35,6 +36,7 @@ const initialize_web_socket  = (server, cors_socket) => {
                 const room_key = create_room_key(send_id, recipient_id);
                 authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (error, user) => {
                     if (error) {return socket.emit('error', { message: error })}
+                    socket.join(user.id_user);
                     const result = await get_messages_conversation(user.id_user,send_id,recipient_id);
                     if (result.error) {
                         socket.emit('error', { message: result.error });
@@ -54,6 +56,7 @@ const initialize_web_socket  = (server, cors_socket) => {
             try {
                 authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } },null, async (error, user) => {
                     if (error) {return socket.emit('error', { message: error });}
+                    socket.join(user.id_user);
                     const result = await get_conversations(user.id_user);
                     if (result.error) {
                         socket.emit('error', { message: result.error });

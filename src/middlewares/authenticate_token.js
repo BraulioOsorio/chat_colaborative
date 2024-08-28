@@ -6,6 +6,7 @@ import tokens from '../controllers/tokens.js'
 import multer from 'multer';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
+import { io } from '../websocket.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const upload = multer({
@@ -50,7 +51,7 @@ export const authenticate_token = async (req, res, next) => {
     const now = Math.floor(Date.now() / 1000);
     const time_until_expiration = decoded.exp - now;
     const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
-    if ( time_until_expiration >=0 && time_until_expiration <= 15 * 60) { 
+    if ( time_until_expiration >=0 && time_until_expiration <= 5 * 60) { 
       const token_new = create_access_token(user.id_user,false);
       await tokens.update_token(token,token_new);
       return res.json({msg:"token now" ,success: true, token_new });
@@ -83,7 +84,7 @@ export const authenticate_token_messages = async (req,res,next) => {
     if ( time_until_expiration >=0 && time_until_expiration <= 5 * 60) { 
       const token_new = create_access_token(user.id_user,false);
       await tokens.update_token(token,token_new);
-      return {token_new };
+      io.to(user.id_user).emit('token_renewed', {"Token New":token_new});
     }
     if (!user || !user.status_user) {
       const errorMessage = !user ? 'Usuario no encontrado' : 'Usuario inactivo';
