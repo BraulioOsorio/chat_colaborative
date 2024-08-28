@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("h ",data);
         
         console.log('Nuevo Token:', data.token_new); // Imprime el nuevo token en la consola
-        tokenInfoDiv.innerText = `Token Renovado: ${data.token_new}`;
+        console.log('Nuevo Token:', data.token_expired); // Imprime el nuevo token en la consola
+        tokenInfoDiv.innerText = `Token Renovado: ${data.token_expired}`;
     });
 });

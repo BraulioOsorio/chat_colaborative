@@ -42,6 +42,8 @@ const initialize_web_socket  = (server, cors_socket) => {
                     socket.join(user.id_user);
                     if (user.newToken) {io.to(user.id_user).emit('token_renewed', { token_new: user.newToken })}
                     if (user.TokenExpired){io.to(user.id_user).emit('token_renewed', { token_expired: user.TokenExpired })}
+                    console.log(user.TokenExpired);
+                    
                     const result = await get_messages_conversation(user.id_user,send_id,recipient_id);
                     if (result.error) {
                         socket.emit('error', { message: result.error });
