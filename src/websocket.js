@@ -48,7 +48,6 @@ const initialize_web_socket  = (server, cors_socket) => {
                         socket.emit('get_direct_messages', result)
                     }
                     socket.join(room_key);
-                    
                 });
             } catch (error) {
                 console.error('Error in authentication or fetching messages:', error);
