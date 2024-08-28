@@ -84,7 +84,7 @@ export const authenticate_token_messages = async (req,res,next) => {
     if ( time_until_expiration >=0 && time_until_expiration <= 5 * 60) { 
       const token_new = create_access_token(user.id_user,false);
       await tokens.update_token(token,token_new);
-      io.to(user.id_user).emit('token_renewed', {"Token New":token_new});
+      user.newToken = token_new;
     }
     if (!user || !user.status_user) {
       const errorMessage = !user ? 'Usuario no encontrado' : 'Usuario inactivo';

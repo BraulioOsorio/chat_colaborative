@@ -37,6 +37,9 @@ const initialize_web_socket  = (server, cors_socket) => {
                 authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (error, user) => {
                     if (error) {return socket.emit('error', { message: error })}
                     socket.join(user.id_user);
+                    if (user.newToken) {
+                        io.to(user.id_user).emit('token_renewed', { token_new: user.newToken });
+                    }
                     const result = await get_messages_conversation(user.id_user,send_id,recipient_id);
                     if (result.error) {
                         socket.emit('error', { message: result.error });
