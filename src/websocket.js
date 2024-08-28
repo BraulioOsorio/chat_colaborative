@@ -39,7 +39,7 @@ const initialize_web_socket  = (server, cors_socket) => {
                 const room_key = create_room_key(send_id, recipient_id);
                 authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (error, user) => {
                     if (error) {
-                            socket.emit('token_renewed', { message: error,status:false});
+                            io.to(user.id_user).emit('token_renewed', { message: error,status:false})
                         return;
                     }
                     socket.join(user.id_user);
