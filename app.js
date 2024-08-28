@@ -33,7 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("h ",data);
         
         console.log('Nuevo Token:', data.token_new); // Imprime el nuevo token en la consola
-        console.log('Nuevo Token:', data.token_expired); // Imprime el nuevo token en la consola
-        tokenInfoDiv.innerText = `Token Renovado: ${data.token_expired}`;
+        tokenInfoDiv.innerText = `Token Renovado: ${data.token_new}`;
+    });
+    socket.on('error', (error) => {
+        console.error('Error:', error.message); // Imprime el mensaje de error en la consola
+        tokenInfoDiv.innerText = `Error: ${error.message}`; // Muestra el mensaje de error en la página
     });
 });
