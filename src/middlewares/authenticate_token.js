@@ -68,6 +68,8 @@ export const authenticate_token = async (req, res, next) => {
 export const authenticate_token_messages = async (req, res, next) => {
   const auth_header = req.headers['authorization'];
   const token = auth_header && auth_header.split(' ')[1];
+  console.log(token);
+  
   if (!token) {return next('Token no proporcionado');}
   const decoded = jwt.decode(token);
   if (!decoded || !decoded.id_user) {return next('Token inválido: No contiene id_user');}
