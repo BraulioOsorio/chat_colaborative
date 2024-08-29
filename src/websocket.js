@@ -13,12 +13,17 @@ const initialize_web_socket  = (server, cors_socket) => {
         //socket.on('disconnect', () => {console.log('Client disconnected');});
         socket.on('join_channel', async ({ channelId, token }) => {
             try {
-                authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (error, user) => {
-                    if (error) {return socket.emit('error', { message: error })}
-                    socket.join(user.id_user);
-                    if (user.newToken) {
-                        io.to(user.id_user).emit('token_renewed', { token_new: user.newToken });
+                authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (response, user) => {
+                    if (response) {
+                        const { error, id_user } = response;
+                        socket.join(id_user);
+                        if (error) {
+                            io.to(id_user).emit('token_renewed', { message: error, status: false });
+                            return;
+                        }
                     }
+                    socket.join(user.id_user);
+                    if (user.newToken) {io.to(user.id_user).emit('token_renewed', { token_new: user.newToken })}
                     const result = await get_messages(channelId, user);
                     if (result.error) {
                         socket.emit('error', { message: result.error });
@@ -37,12 +42,16 @@ const initialize_web_socket  = (server, cors_socket) => {
         socket.on('direct_message', async ({ send_id,recipient_id, token }) => {
             try {
                 const room_key = create_room_key(send_id, recipient_id);
-                authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (error, user) => {
-                    socket.join(user.id_user);
-                    if (error) {
-                            io.to(user.id_user).emit('token_renewed', { message: error,status:false})
-                        return;
+                authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (response, user) => {
+                    if (response) {
+                        const { error, id_user } = response;
+                        socket.join(id_user);
+                        if (error) {
+                            io.to(id_user).emit('token_renewed', { message: error, status: false });
+                            return;
+                        }
                     }
+                    socket.join(user.id_user);
                     if (user.newToken) {io.to(user.id_user).emit('token_renewed', { token_new: user.newToken })}                    
                     const result = await get_messages_conversation(user.id_user,send_id,recipient_id);
                     if (result.error) {
@@ -60,12 +69,17 @@ const initialize_web_socket  = (server, cors_socket) => {
 
         socket.on('get_conversations', async ({ token }) => {
             try {
-                authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } },null, async (error, user) => {
-
-                    if (error) {return socket.emit('error', { message: error });}
+                authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } },null, async (response, user) => {
+                    if (response) {
+                        const { error, id_user } = response;
+                        socket.join(id_user);
+                        if (error) {
+                            io.to(id_user).emit('token_renewed', { message: error, status: false });
+                            return;
+                        }
+                    }
                     socket.join(user.id_user);
                     if (user.newToken) {io.to(user.id_user).emit('token_renewed', { token_new: user.newToken })}
-                    if (user.TokenExpired){io.to(user.id_user).emit('token_renewed', { token_expired: user.TokenExpired })}
                     const result = await get_conversations(user.id_user);
                     if (result.error) {
                         socket.emit('error', { message: result.error });

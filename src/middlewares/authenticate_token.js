@@ -72,16 +72,17 @@ export const authenticate_token_messages = async (req,res,next) => {
   if (!token) {return next('Token no proporcionado')}
   jwt.verify(token, SECRET_KEY, async (err, decoded) => {
     if (err) {
+      const user_decode = await prisma.users.findFirst({ where: { id_user: decoded.id_user } });
       if (err.name === 'TokenExpiredError') {
         await tokens.delete_token(token);
-        return next('Token expirado');
+        return next({ error: 'Token expirado', id_user: user_decode.id_user});
       } else {
         return next('Token inválido');
       }
     }
+    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
     const now = Math.floor(Date.now() / 1000);
     const time_until_expiration = decoded.exp - now;
-    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
     if ( time_until_expiration >=0 && time_until_expiration <= 5 * 60) { 
       const token_new = create_access_token(user.id_user,false);
       await tokens.update_token(token,token_new);
@@ -89,7 +90,7 @@ export const authenticate_token_messages = async (req,res,next) => {
     }
     if (!user || !user.status_user) {
       const errorMessage = !user ? 'Usuario no encontrado' : 'Usuario inactivo';
-      return next(errorMessage);
+      return next({ error: errorMessage,  id_user: user.id_user});
     }
     return next(null, user); 
   });
