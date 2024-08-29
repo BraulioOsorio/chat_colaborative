@@ -98,6 +98,8 @@ export const find_user_name = async (req, res) => {
             return res.status(400).json({ status: false, msg: "El usuario de red no puede estar vacío" });
         }
 
+        network_user = decodeURIComponent(network_user);
+
         // Validar que solo contenga letras y números
         const alphanumericRegex = /^[a-zA-Z0-9]+$/;
         if (!alphanumericRegex.test(network_user)) {
