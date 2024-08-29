@@ -37,6 +37,7 @@ export const delete_file_from_supabase = async (file_name) => {
 export const authenticate_token = async (req, res, next) => {
   const auth_header = req.headers['authorization'];
   const token = auth_header && auth_header.split(' ')[1];
+  console.log("Normal  ",token);
   if (!token) {return res.status(401).json({ error: 'Token no proporcionado' })}
   jwt.verify(token, SECRET_KEY, async (err, decoded) => {
     if (err) {
@@ -67,7 +68,7 @@ export const authenticate_token = async (req, res, next) => {
 export const authenticate_token_messages = async (req, res, next) => {
   const auth_header = req.headers['authorization'];
   const token = auth_header && auth_header.split(' ')[1];
-  console.log(token);
+  console.log("So-- ",token);
   
   if (!token) {return next('Token no proporcionado');}
   const decoded = jwt.decode(token);
