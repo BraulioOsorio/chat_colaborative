@@ -91,7 +91,7 @@ export const find_user = async (req, res) => {
 
 export const find_user_name = async (req, res) => {
     try {
-        const { network_user } = req.params;
+        let { network_user } = req.params;
 
         // Validar que no esté vacío
         if (!network_user || network_user.trim() === '') {
