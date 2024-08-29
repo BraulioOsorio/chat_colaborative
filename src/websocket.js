@@ -38,7 +38,6 @@ const initialize_web_socket  = (server, cors_socket) => {
                 socket.emit('error', { message: 'Autenticación fallida o error al obtener mensajes'});
             }
         });
-
         socket.on('direct_message', async ({ send_id,recipient_id, token }) => {
             try {
                 const room_key = create_room_key(send_id, recipient_id);
