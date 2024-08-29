@@ -65,57 +65,39 @@ export const authenticate_token = async (req, res, next) => {
   });
 };
 
-
 export const authenticate_token_messages = async (req, res, next) => {
   const auth_header = req.headers['authorization'];
   const token = auth_header && auth_header.split(' ')[1];
-
-  if (!token) {
-      return next('Token no proporcionado');
-  }
-
-  // Decodifica el token primero para obtener id_user sin verificar la validez
+  if (!token) {return next('Token no proporcionado');}
   const decoded = jwt.decode(token);
-
-  if (!decoded || !decoded.id_user) {
-      return next('Token inválido: No contiene id_user');
-  }
-
+  if (!decoded || !decoded.id_user) {return next('Token inválido: No contiene id_user');}
   const user_decode = await prisma.users.findFirst({ where: { id_user: decoded.id_user } });
-
   jwt.verify(token, SECRET_KEY, async (err, verifiedDecoded) => {
       if (err) {
           if (err.name === 'TokenExpiredError') {
               await tokens.delete_token(token);
               return next({ error: 'Token expirado', id_user: user_decode.id_user });
           } else {
-              return next('Token inválido');
+            return next({ error: 'Token inválido', id_user: user_decode.id_user });
           }
       }
-
-      // Aquí el token es válido y contiene id_user
       const user = await prisma.users.findFirst({
           where: { id_user: verifiedDecoded.id_user },
           include: { role_permission: { include: { Permissions: true } }, role: true }
       });
-
       const now = Math.floor(Date.now() / 1000);
       const time_until_expiration = verifiedDecoded.exp - now;
-
       if (time_until_expiration >= 0 && time_until_expiration <= 5 * 60) {
           const token_new = create_access_token(user.id_user, false);
           await tokens.update_token(token, token_new);
           user.newToken = token_new;
       }
-
       if (!user || !user.status_user) {
           const errorMessage = !user ? 'Usuario no encontrado' : 'Usuario inactivo';
           return next({ error: errorMessage, id_user: user.id_user });
       }
-
       return next(null, user);
   });
 };
-
 export const upload_middleware = upload;
 export default upload;
