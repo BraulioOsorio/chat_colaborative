@@ -94,7 +94,7 @@ export const find_user_name = async (req, res) => {
         let { network_user } = req.params;
         const alphanumericRegex = /^[a-zA-Z0-9]+$/;
         if (!alphanumericRegex.test(network_user)) {
-            return res.status(400).json({ status: false, msg: "No encontrado" });
+            return res.json({ status: false, msg: "No encontrado" });
         }
         const user = await prisma.users.findFirst({ where: { network_user: {contains: req.params.network_user,mode: 'insensitive'} } });
         if (!user) {return res.json({"status":false,"msg":"No encontrado"}) }
