@@ -71,16 +71,15 @@ export const authenticate_token_messages = async (req,res,next) => {
   const token = auth_header && auth_header.split(' ')[1];
   if (!token) {return next('Token no proporcionado')}
   jwt.verify(token, SECRET_KEY, async (err, decoded) => {
-    const user_decode = await prisma.users.findFirst({ where: { id_user: decoded.id_user } });
+    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
     if (err) {
       if (err.name === 'TokenExpiredError') {
         await tokens.delete_token(token);
-        return next({ error: 'Token expirado', id_user: user_decode.id_user});
+        return next({ error: 'Token expirado', id_user: user.id_user});
       } else {
         return next('Token inválido');
       }
     }
-    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
     const now = Math.floor(Date.now() / 1000);
     const time_until_expiration = decoded.exp - now;
     if ( time_until_expiration >=0 && time_until_expiration <= 5 * 60) { 
