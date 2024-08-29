@@ -92,22 +92,12 @@ export const find_user = async (req, res) => {
 export const find_user_name = async (req, res) => {
     try {
         let { network_user } = req.params;
-
-        // Validar que no esté vacío
-        if (!network_user || network_user.trim() === '') {
-            return res.status(400).json({ status: false, msg: "El usuario de red no puede estar vacío" });
-        }
-
-        network_user = decodeURIComponent(network_user);
-
-        // Validar que solo contenga letras y números
         const alphanumericRegex = /^[a-zA-Z0-9]+$/;
         if (!alphanumericRegex.test(network_user)) {
-            return res.status(400).json({ status: false, msg: "El usuario de red solo puede contener letras y números" });
+            return res.status(400).json({ status: false, msg: "No encontrado" });
         }
-
         const user = await prisma.users.findFirst({ where: { network_user: {contains: req.params.network_user,mode: 'insensitive'} } });
-        if (!user) {return res.json({"status":false,"msg":"no encontrado"}) }
+        if (!user) {return res.json({"status":false,"msg":"No encontrado"}) }
         res.json(user);
     } catch (error) {
         console.error('Error find user:', error);

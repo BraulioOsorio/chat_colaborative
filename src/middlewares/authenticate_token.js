@@ -6,14 +6,13 @@ import tokens from '../controllers/tokens.js'
 import multer from 'multer';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import { io } from '../websocket.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const upload = multer({
   storage: multer.memoryStorage(),
 });
 export const upload_file_to_supabase = async (file) => {
-  const file_name = `${uuidv4()}_${file.originalname}`;
+  const file_name = `${uuidv4()}\\${file.originalname}`;
   const { data, error } = await supabase.storage
       .from('Storage Chat Internal')
       .upload(file_name, file.buffer, {

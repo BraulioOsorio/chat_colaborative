@@ -44,7 +44,6 @@ export const find_user_validation = [
 
 export const find_user_name_validation = [
   param('network_user').notEmpty().withMessage('El usuario de red no puede estar vacío')
-  .matches(/^[a-zA-Z0-9]+$/).withMessage('El usuario de red solo puede contener letras y números')
 ];
 
 export const delete_user_validation = [

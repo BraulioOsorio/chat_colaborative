@@ -97,13 +97,15 @@ export const create_conversation = async (req, res) => {
         });
         const file = req.file;
         let storage = null
+        let type_message = 'message'
         if (file) {
             const relative_file_path = await upload_file_to_supabase(file)
             storage = `${STORAGE_URL}${relative_file_path}`
+            type_message = 'file'
         }
         let date_time = get_current_datetime()
         const get_messages_validator_exist = await get_messages_conversation(req.user.id_user, req.user.id_user, req.body.recipient_id)
-        const conversation = await prisma.direct_message.create({ data: { ...req.body, send_id: req.user.id_user, created_at: date_time,url_file: storage} });
+        const conversation = await prisma.direct_message.create({ data: { ...req.body, send_id: req.user.id_user, created_at: date_time,url_file: storage,type_message : type_message} });
         const response = {
             ...conversation,user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };

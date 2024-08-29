@@ -133,13 +133,15 @@ export const send_message = async (req,res) => {
         if (!permissions_names.includes("ENVIAR_MENSAJE") && req.user.role.name == "AGENTE")
             return res.status(401).json({ error: 'No tiene permisos de enviar mensajes' });
         const file = req.file;
-        let storage = null
+        let storage = null;
+        let type_message = 'message'
         if (file) {
             if(!permissions_names.includes("ENVIAR_DOCUMENTO") && req.user.role.name == "AGENTE")
                 return res.status(401).json({ error: 'No tiene permisos de enviar mensajes' });
             
             const relative_file_path = await upload_file_to_supabase(file)
             storage = `${STORAGE_URL}${relative_file_path}`
+            type_message = 'file'
         }
 
         let date_time = get_current_datetime()
@@ -152,7 +154,7 @@ export const send_message = async (req,res) => {
             }).join(' ');
         };
         const censored_content = censor_message(req.body.content);
-        const message_sent = await prisma.messages.create({ data: {...req.body,content:censored_content, user_id: req.user.id_user,url_file:storage,channel_id:+req.body.channel_id,created_at:date_time } });
+        const message_sent = await prisma.messages.create({ data: {...req.body,content:censored_content, user_id: req.user.id_user,url_file:storage,channel_id:+req.body.channel_id,created_at:date_time,type_message : type_message } });
         const response = {
             ...message_sent,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
