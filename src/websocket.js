@@ -8,19 +8,22 @@ let io;
 // esta función se encarga de manejar la autenticación de los sockets, incluyendo la renovación de tokens
 const handleAuthentication = async (socket, token, callback) => {
     try {
-        authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (response, user) => {
-            if (response) {
-                const { error, id_user } = response;
-                socket.join(id_user);
-                if (error) {
-                    io.to(id_user).emit('token_renewed', { message: error, status: false });
-                    return;
-                }
+        authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (response, user, newToken) => {
+            if (response && response.error) {
+                console.log('Authentication error:', response.error);
+                socket.emit('error', { message: response.error });
+                return;
             }
+            
+            console.log('User authenticated:', user.id_user);
             socket.join(user.id_user);
-            if (user.newToken) {
-                io.to(user.id_user).emit('token_renewed', { token_new: user.newToken });
+            console.log('User newToken?:', newToken);
+            
+            if (newToken) {
+                console.log('New token websocket.js:', newToken);
+                socket.emit('token_renewed', { token_new: newToken });
             }
+            
             await callback(user);
         });
     } catch (error) {
