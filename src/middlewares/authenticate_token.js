@@ -86,11 +86,9 @@ export const authenticate_token = async (req, res, next) => {
   if (result.newToken) {
     res.setHeader('New-Token', result.newToken);
     res.setHeader('Access-Control-Expose-Headers', 'New-Token');
-    console.log('New token API:', result.newToken);
   }
 
   req.user = result.user;
-  console.log('req.token', req.newToken);
   
   next();
 };
@@ -107,7 +105,6 @@ export const authenticate_token_messages = async (req, res, next) => {
   }
 
   if (result.newToken) {
-    console.log('New token websocket:', result.newToken);
     return next(null, result.user, result.newToken);
   }
 

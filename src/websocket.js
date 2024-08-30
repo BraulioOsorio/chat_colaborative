@@ -15,12 +15,9 @@ const handleAuthentication = async (socket, token, callback) => {
                 return;
             }
             
-            console.log('User authenticated:', user.id_user);
             socket.join(user.id_user);
-            console.log('User newToken?:', newToken);
             
             if (newToken) {
-                console.log('New token websocket.js:', newToken);
                 socket.emit('token_renewed', { token_new: newToken });
             }
             
