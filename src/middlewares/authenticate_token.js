@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from '../core/db/index.js';
-import { SECRET_KEY, SUPABASE_KEY, SUPABASE_URL } from '../core/config/config.js';
+import { SECRET_KEY, SUPABASE_URL, SUPABASE_KEY } from '../core/config/config.js';
 import { create_access_token } from '../core/config/utils.js';
-import tokens from '../controllers/tokens.js'
+import tokens from '../controllers/tokens.js';
 import multer from 'multer';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
@@ -34,72 +34,84 @@ export const delete_file_from_supabase = async (file_name) => {
     console.error('Error deleting file:', error.message);
   }
 };
-export const authenticate_token = async (req, res, next) => {
-  const auth_header = req.headers['authorization'];
-  const token = auth_header && auth_header.split(' ')[1];
-  console.log("Normal  ",token);
-  if (!token) {return res.status(401).json({ error: 'Token no proporcionado' })}
-  jwt.verify(token, SECRET_KEY, async (err, decoded) => {
-    if (err) {
-      if (err.name === 'TokenExpiredError') {
-        await tokens.delete_token(token);
-        return res.status(401).json({ error: 'Token expirado' });
-      } else {
-        return res.status(403).json({ error: 'Token inválido' });
-      }
-    }
+
+async function baseAuthenticate(token) {
+  if (!token) {
+    return { error: 'Token no proporcionado' };
+  }
+
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    
     const now = Math.floor(Date.now() / 1000);
-    const time_until_expiration = decoded.exp - now;
-    const user = await prisma.users.findFirst({ where: { id_user: decoded.id_user }, include: { role_permission: { include: { Permissions: true } }, role: true } });
-    if ( time_until_expiration >=0 && time_until_expiration <= 5 * 60) { 
-      const token_new = create_access_token(user.id_user,false);
-      await tokens.update_token(token,token_new);
-      return res.json({msg:"token now" ,success: true, token_new });
-    }
+    const timeUntilExpiration = decoded.exp - now;
+    
+    const user = await prisma.users.findFirst({ 
+      where: { id_user: decoded.id_user }, 
+      include: { role_permission: { include: { Permissions: true } }, role: true } 
+    });
+
     if (!user || !user.status_user) {
       const errorMessage = !user ? 'Usuario no encontrado' : 'Usuario inactivo';
-      return res.status(!user ? 401 : 403).json({ error: errorMessage });
+      return { error: errorMessage };
     }
-    req.user = user;
-    next();
-  });
+
+    let newToken = null;
+    if (timeUntilExpiration >= 0 && timeUntilExpiration <= 5 * 60) {
+      newToken = create_access_token(user.id_user, false);
+      await tokens.update_token(token, newToken);
+    }
+
+    return { user, newToken };
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      await tokens.delete_token(token);
+      return { error: 'Token expirado' };
+    } else {
+      return { error: 'Token inválido' };
+    }
+  }
+}
+
+export const authenticate_token = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  const result = await baseAuthenticate(token);
+
+  if (result.error) {
+    return res.status(401).json({ error: result.error });
+  }
+
+  if (result.newToken) {
+    res.setHeader('New-Token', result.newToken);
+    res.setHeader('Access-Control-Expose-Headers', 'New-Token');
+    console.log('New token API:', result.newToken);
+  }
+
+  req.user = result.user;
+  console.log('req.token', req.newToken);
+  
+  next();
 };
 
+
 export const authenticate_token_messages = async (req, res, next) => {
-  const auth_header = req.headers['authorization'];
-  const token = auth_header && auth_header.split(' ')[1];
-  console.log("So-- ",token);
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
   
-  if (!token) {return next('Token no proporcionado');}
-  const decoded = jwt.decode(token);
-  if (!decoded || !decoded.id_user) {return next('Token inválido: No contiene id_user');}
-  const user_decode = await prisma.users.findFirst({ where: { id_user: decoded.id_user } });
-  jwt.verify(token, SECRET_KEY, async (err, verifiedDecoded) => {
-      if (err) {
-          if (err.name === 'TokenExpiredError') {
-              await tokens.delete_token(token);
-              return next({ error: 'Token expirado', id_user: user_decode.id_user });
-          } else {
-            return next({ error: 'Token inválido', id_user: user_decode.id_user });
-          }
-      }
-      const user = await prisma.users.findFirst({
-          where: { id_user: verifiedDecoded.id_user },
-          include: { role_permission: { include: { Permissions: true } }, role: true }
-      });
-      const now = Math.floor(Date.now() / 1000);
-      const time_until_expiration = verifiedDecoded.exp - now;
-      if (time_until_expiration >= 0 && time_until_expiration <= 5 * 60) {
-          const token_new = create_access_token(user.id_user, false);
-          await tokens.update_token(token, token_new);
-          user.newToken = token_new;
-      }
-      if (!user || !user.status_user) {
-          const errorMessage = !user ? 'Usuario no encontrado' : 'Usuario inactivo';
-          return next({ error: errorMessage, id_user: user.id_user });
-      }
-      return next(null, user);
-  });
+  const result = await baseAuthenticate(token);
+
+  if (result.error) {
+    return next({ error: result.error, id_user: result.id_user });
+  }
+
+  if (result.newToken) {
+    console.log('New token websocket:', result.newToken);
+    return next(null, result.user, result.newToken);
+  }
+
+  next(null, result.user);
 };
 export const upload_middleware = upload;
 export default upload;
