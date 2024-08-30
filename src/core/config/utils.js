@@ -15,7 +15,7 @@ export const generate_user_id = (length) => {
 }
 
 export const create_access_token = (user_id,status) => {
-    const jwt_token = jwt.sign({ id_user: user_id }, SECRET_KEY, { expiresIn: '6m' })
+    const jwt_token = jwt.sign({ id_user: user_id }, SECRET_KEY, { expiresIn: '7m' })
     if(status){register_token(jwt_token,user_id)}
     return jwt_token
 }
