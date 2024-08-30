@@ -76,22 +76,15 @@ async function baseAuthenticate(token) {
 export const authenticate_token = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  
   const result = await baseAuthenticate(token);
-
   if (result.error) {
     return res.status(401).json({ error: result.error });
   }
-
   if (result.newToken) {
     res.setHeader('New-Token', result.newToken);
     res.setHeader('Access-Control-Expose-Headers', 'New-Token');
-    console.log('New token API:', result.newToken);
   }
-
   req.user = result.user;
-  console.log('req.token', req.newToken);
-  
   next();
 };
 
@@ -99,18 +92,13 @@ export const authenticate_token = async (req, res, next) => {
 export const authenticate_token_messages = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  
   const result = await baseAuthenticate(token);
-
   if (result.error) {
     return next({ error: result.error, id_user: result.id_user });
   }
-
   if (result.newToken) {
-    console.log('New token websocket:', result.newToken);
     return next(null, result.user, result.newToken);
   }
-
   next(null, result.user);
 };
 export const upload_middleware = upload;

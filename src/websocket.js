@@ -10,24 +10,16 @@ const handleAuthentication = async (socket, token, callback) => {
     try {
         authenticate_token_messages({ headers: { authorization: `Bearer ${token}` } }, null, async (response, user, newToken) => {
             if (response && response.error) {
-                console.log('Authentication error:', response.error);
                 socket.emit('error', { message: response.error });
                 return;
             }
-            
-            console.log('User authenticated:', user.id_user);
             socket.join(user.id_user);
-            console.log('User newToken?:', newToken);
-            
             if (newToken) {
-                console.log('New token websocket.js:', newToken);
                 socket.emit('token_renewed', { token_new: newToken });
             }
-            
             await callback(user);
         });
     } catch (error) {
-        console.error('Error in authentication:', error);
         socket.emit('error', { message: 'Autenticación fallida' });
     }
 };
@@ -41,7 +33,6 @@ const handleEvent = async (socket, eventName, dataCallback) => {
             socket.emit(eventName, result);
         }
     } catch (error) {
-        console.error(`Error in ${eventName}:`, error);
         socket.emit('error', { message: `Error al procesar ${eventName}` });
     }
 };
