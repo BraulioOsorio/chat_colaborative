@@ -1,4 +1,5 @@
 import { prisma } from '../core/db/index.js';
+import { redisClient } from '../core/config/redisClient.js';
 
 export const create_word = async (req, res) => {
     try {
@@ -26,8 +27,14 @@ export const get_words = async (req, res) => {
 export const find_word = async (req, res) => {
     try {
         if (req.user.role.name !== "SUPERADMIN"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+        
+        const cachedWords = await redisClient.get(`words:${req.params.id}`);
+        if (cachedWords) {
+            return res.json(JSON.parse(cachedWords));
+        }
         const word = await prisma.vulgar_words.findFirst({where: {OR:[{ word: req.params.id },{ id_vulgar_words: +req.params.id}]}});
         if (!word) {return res.status(404).json({ error: 'word not found' })}
+        await redisClient.set(`words:${req.params.id}`, JSON.stringify(word), 'EX', 3600); // Expira en 1 hora
         res.json(word);
     } catch (error) {
         console.error('Error find word:', error);

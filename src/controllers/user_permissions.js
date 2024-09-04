@@ -1,4 +1,5 @@
 import { prisma } from '../core/db/index.js';
+import { redisClient } from '../core/config/redisClient.js';
 
 export const assign_permission = async (req, res) => {    
     try {
@@ -28,12 +29,18 @@ export const update_user_permissions = async (req, res) => {
 
 export const find_user_permissions = async (req, res) => {
     try {
+
+        const cachedPermissions = await redisClient.get(`permissions:${req.body.id_user}`);
+        if (cachedPermissions) {
+            return res.json(JSON.parse(cachedPermissions));
+        }
         const user = await prisma.users.findFirst({
             where: { id_user:req.body.id_user }, select: {
                 id_user: true,role_permission: { select: { Permissions: { select: { name: true} } ,id_user_permission:true} },
             }
         });
         if (!user) {return res.status(404).json({ error: 'Usuario no encontrado' })}
+        await redisClient.set(`permissions:${req.body.id_user}`, JSON.stringify(user), 'EX', 3600); // Expira en 1 hora
         res.json(user);
     } catch (error) {
         console.error('Error find user:', error);

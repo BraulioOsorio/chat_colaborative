@@ -4,6 +4,7 @@ import { validate_role } from '../core/checks/validations_users.js';
 import { extract_file_name, generate_user_id } from '../core/config/utils.js';
 import { upload_middleware, upload_file_to_supabase, delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
+import { redisClient } from '../core/config/redisClient.js';
 
 export const create_user = async (req, res) => {
     let id_rol = null;
@@ -60,9 +61,19 @@ export const get_users = async (req, res) => {
         const skip = (page - 1) * limit;
         let users,total_users;
         if (req.user.role.name === "SUPERADMIN") {
+            // Intentar obtener usuarios de Redis
+            const cachedUsers = await redisClient.get(`users:${page}:${limit}`);
+            if (cachedUsers) {
+                return res.json(JSON.parse(cachedUsers));
+            }
             users = await prisma.users.findMany({skip: skip,take: limit,include: {role: true,tokens: true}});
             total_users = await prisma.users.count(); 
         } else if (req.user.role.name === "ADMIN") {
+            // Intentar obtener usuarios de Redis
+            const cachedUsers = await redisClient.get(`users:${page}:${limit}`);
+            if (cachedUsers) {
+                return res.json(JSON.parse(cachedUsers));
+            }
             users = await prisma.users.findMany({ skip:skip, take:limit, where: { role: { name: "AGENTE" } }, include: { role: true } })
             total_users = await prisma.users.count({where:{role:{name:"AGENTE"}}}); 
         }else{
@@ -70,6 +81,9 @@ export const get_users = async (req, res) => {
         }
         const total_pages = Math.ceil(total_users / limit);
         if (limit > total_pages) {return res.status(400).json({ error: `La página solicitada (${page}) excede el número total de páginas (${total_pages})` })}
+        // Guardar usuarios en Redis
+        await redisClient.set(`users:${page}:${limit}`, JSON.stringify({page,limit,total_pages,total_users,users}), 'EX', 3600); // Expira en 1 hora
+        
         return res.json({page,limit,total_pages,total_users,users});
     } catch (error) {
         console.error('Error get user:', error);
@@ -80,8 +94,18 @@ export const get_users = async (req, res) => {
 export const find_user = async (req, res) => {
     try {
         if (req.user.role.name === "AGENTE"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}    
+
+        // Intentar obtener usuario de Redis
+        const cachedUser = await redisClient.get(`user:${req.params.id}`);
+        if (cachedUser) {
+            return res.json(JSON.parse(cachedUser));
+        }
         const user = await prisma.users.findUnique({ where: { id_user: req.params.id } });
         if (!user) {return res.status(404).json({ error: 'Usuario no encontrado' })}
+
+        // Guardar usuario en Redis
+        await redisClient.set(`user:${req.params.id}`, JSON.stringify(user), 'EX', 3600); // Expira en 1 hora
+
         res.json(user);
     } catch (error) {
         console.error('Error find user:', error);
@@ -96,8 +120,19 @@ export const find_user_name = async (req, res) => {
         if (!alphanumericRegex.test(network_user)) {
             return res.json({ status: false, msg: "No encontrado" });
         }
+
+        // Intentar obtener usuario de Redis
+        const cachedUser = await redisClient.get(`user:${network_user}`);
+        if (cachedUser) {
+            return res.json(JSON.parse(cachedUser));
+        }
+        
         const user = await prisma.users.findFirst({ where: { network_user: {contains: req.params.network_user,mode: 'insensitive'} } });
         if (!user) {return res.json({"status":false,"msg":"No encontrado"}) }
+
+        // Guardar usuario en Redis
+        await redisClient.set(`user:${network_user}`, JSON.stringify(user), 'EX', 3600); // Expira en 1 hora
+
         res.json(user);
     } catch (error) {
         console.error('Error find user:', error);

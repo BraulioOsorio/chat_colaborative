@@ -5,6 +5,8 @@ import { io } from '../websocket.js';
 import { upload_middleware, upload_file_to_supabase,delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
 import { differenceInMinutes } from 'date-fns';
+import { redisClient } from '../core/config/redisClient.js';
+
 export const create_channel = async (req,res) => {
     try {
         await new Promise((resolve, reject) => {
@@ -35,7 +37,17 @@ export const create_channel = async (req,res) => {
 
 export const get_channels = async (req, res) => {
     try {
+
+        // Intentar obtener usuario de Redis
+        const cachedUserChannels = await redisClient.get(`channels:${req.user.id_user}`);
+        if (cachedUserChannels) {
+            return res.json(JSON.parse(cachedUserChannels));
+        }
         let channel = await prisma.channels.findMany({ where: { users_channels: { some: { user_id: req.user.id_user } } }, select: { id_channel: true, name: true,status_channel : true,description:true,image_channel:true } });
+
+        // Guardar Canales del usuario en caché
+        await redisClient.set(`channels:${req.user.id_user}`, JSON.stringify(channel), 'EX', 3600); // Expira en 1 hora
+
         return res.json(channel)
     } catch (error) {
         console.error('Error get_channels:', error);
@@ -88,7 +100,18 @@ export const insert_users_channel = async (req, res) => {
 export const get_channel_users = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Intentar obtener usuarios del canal de Redis
+        const cachedChannelUsers = await redisClient.get(`channel_users:${id}`);
+
+        if (cachedChannelUsers) {
+            return res.json(JSON.parse(cachedChannelUsers));
+        }
         const channel_users = await prisma.users_channels.findMany({where: { channel_id: +id},select: {users: {select: {id_user: true,full_name: true}}}});
+
+        // Guardar usuarios del canal en caché
+        await redisClient.set(`channel_users:${id}`, JSON.stringify(channel_users), 'EX', 3600); // Expira en 1 hora
+
         return res.json(channel_users);
     } catch (error) {
         console.error('Error get_channel_users:', error);
