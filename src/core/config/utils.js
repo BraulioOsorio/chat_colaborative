@@ -38,7 +38,7 @@ export function extract_file_name(url) {
     return decodeURIComponent(file_name);
 }
 
-export const cacheData = async (key, data, expirationTime = 300) => {
+export const cacheData = async (key, data, expirationTime = 3600) => {
     try {
         await redisClient.set(key, JSON.stringify(data), { EX: expirationTime });
     } catch (error) {
