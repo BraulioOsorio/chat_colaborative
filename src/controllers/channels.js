@@ -59,9 +59,7 @@ export const update_channel = async (req, res) => {
     try {
         if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permisos' })}
         let channel_update = await prisma.channels.update({ where: { id_channel:+req.body.id_channel }, data: req.body });
-
         //await deleteCachedData(`channels:*`);
-
         return res.json(channel_update)
     } catch (error) {
         console.error('Error updating channel:', error);
