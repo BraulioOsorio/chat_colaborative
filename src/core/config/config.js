@@ -4,3 +4,7 @@ export const SECRET_KEY = process.env.SECRET_KEY
 export const SUPABASE_URL = process.env.SUPABASE_URL
 export const SUPABASE_KEY = process.env.SUPABASE_KEY
 export const STORAGE_URL = process.env.STORAGE_URL
+export const REDIS_PASSWORD = process.env.REDIS_PASSWORD
+export const REDIS_HOST = process.env.REDIS_HOST
+export const REDIS_PORT = process.env.REDIS_PORT
+export const REDIS_RENDER_URL = process.env.REDIS_RENDER_URL
