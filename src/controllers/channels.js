@@ -38,7 +38,6 @@ export const create_channel = async (req,res) => {
 
 export const get_channels = async (req, res) => {
     try {
-
         // Intentar obtener usuario de Redis
         const cachedUserChannels = await getCachedData(`channels:${req.user.id_user}`);
         if (cachedUserChannels) {
