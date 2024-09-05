@@ -40,7 +40,7 @@ export function extract_file_name(url) {
 
 export const cacheData = async (key, data, expirationTime = 300) => {
     try {
-        await redisClient.set(key, JSON.stringify(data), 'EX', expirationTime);
+        await redisClient.set(key, JSON.stringify(data), { EX: expirationTime });
     } catch (error) {
         console.error('Error al guardar en cache:', error);
     }
