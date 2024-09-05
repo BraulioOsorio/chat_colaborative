@@ -1,5 +1,5 @@
 import { prisma } from '../core/db/index.js';
-import { redisClient } from '../core/config/redisClient.js';
+import {  cacheData, getCachedData, deleteCachedData } from '../core/config/utils.js';
 
 export const assign_permission = async (req, res) => {    
     try {
@@ -20,6 +20,9 @@ export const assign_permission = async (req, res) => {
 export const update_user_permissions = async (req, res) => {
     try {
         if (req.user.role.name !== "ADMIN" && req.user.role.name !== "SUPERADMIN"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+
+        await deleteCachedData(`permissions:${req.params.id}`);
+
         return res.json(await prisma.user_permissions.update({data:req.body ,where:{id_user_permission:+req.params.id}}))
     } catch (error) {
         console.error('Error updating user:', error);
@@ -29,10 +32,9 @@ export const update_user_permissions = async (req, res) => {
 
 export const find_user_permissions = async (req, res) => {
     try {
-
-        const cachedPermissions = await redisClient.get(`permissions:${req.body.id_user}`);
+        const cachedPermissions =  await getCachedData(`permissions:${req.body.id_user}`);
         if (cachedPermissions) {
-            return res.json(JSON.parse(cachedPermissions));
+            return res.json(cachedPermissions);
         }
         const user = await prisma.users.findFirst({
             where: { id_user:req.body.id_user }, select: {
@@ -40,7 +42,7 @@ export const find_user_permissions = async (req, res) => {
             }
         });
         if (!user) {return res.status(404).json({ error: 'Usuario no encontrado' })}
-        await redisClient.set(`permissions:${req.body.id_user}`, JSON.stringify(user), 'EX', 3600); // Expira en 1 hora
+        await cacheData(`permissions:${req.body.id_user}`, user);
         res.json(user);
     } catch (error) {
         console.error('Error find user:', error);
@@ -57,6 +59,9 @@ export const delete_user_permissions = async (req, res) => {
             const deleted_permission = await prisma.user_permissions.delete({ where: { id_user_permission: id }});
             deleted_permissions.push(deleted_permission);
         }
+
+        await deleteCachedData(`permissions:${req.params.id}`);
+
         return res.json(deleted_permissions);
     } catch (error) {
         console.error('Error deleting user permissions:', error);

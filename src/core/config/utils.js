@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { SECRET_KEY } from './config.js';
 import {validationResult} from "express-validator";
 import { register_token } from '../../controllers/tokens.js';
+import { redisClient } from './redisClient.js';
+
 import { DateTime } from 'luxon';
 export const get_current_datetime = () => {
     let now = DateTime.now().setZone('America/Bogota').toFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -36,4 +38,43 @@ export function extract_file_name(url) {
     return decodeURIComponent(file_name);
 }
 
+export const cacheData = async (key, data, expirationTime = 300) => {
+    try {
+        await redisClient.set(key, JSON.stringify(data), 'EX', expirationTime);
+    } catch (error) {
+        console.error('Error al guardar en cache:', error);
+    }
+};
+
+export const getCachedData = async (key) => {
+    const cachedData = await redisClient.get(key);
+    return cachedData ? JSON.parse(cachedData) : null;
+};
+
+export const deleteCachedData = async (key) => {
+    try {
+        await redisClient.del(key);
+    } catch (error) {
+        console.error('Error al eliminar del cache:', error);
+    }
+};
+
+export const clearCache = async () => {
+    try {
+        await redisClient.del('*');
+        console.log('Cache limpiado');
+    } catch (error) {
+        console.error('Error al limpiar el cache:', error);
+    }
+};
+
+export const allCacheKeys = async () => {
+    try {
+        const keys = await redisClient.keys('*');
+        console.log('Llaves en el cache:', keys);
+        return keys;
+    } catch (error) {
+        console.error('Error al obtener las llaves del cache:', error);
+    }
+};
 export default {generate_user_id,create_access_token};

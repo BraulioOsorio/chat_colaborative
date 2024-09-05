@@ -5,7 +5,8 @@ import { io } from '../websocket.js';
 import { upload_middleware, upload_file_to_supabase,delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
 import { differenceInMinutes } from 'date-fns';
-import { redisClient } from '../core/config/redisClient.js';
+import {  cacheData, getCachedData, deleteCachedData } from '../core/config/utils.js';
+
 
 export const create_channel = async (req,res) => {
     try {
@@ -39,14 +40,14 @@ export const get_channels = async (req, res) => {
     try {
 
         // Intentar obtener usuario de Redis
-        const cachedUserChannels = await redisClient.get(`channels:${req.user.id_user}`);
+        const cachedUserChannels = await getCachedData(`channels:${req.user.id_user}`);
         if (cachedUserChannels) {
-            return res.json(JSON.parse(cachedUserChannels));
+            return res.json(cachedUserChannels);
         }
         let channel = await prisma.channels.findMany({ where: { users_channels: { some: { user_id: req.user.id_user } } }, select: { id_channel: true, name: true,status_channel : true,description:true,image_channel:true } });
 
         // Guardar Canales del usuario en caché
-        await redisClient.set(`channels:${req.user.id_user}`, JSON.stringify(channel), 'EX', 3600); // Expira en 1 hora
+        await cacheData(`channels:${req.user.id_user}`, channel);
 
         return res.json(channel)
     } catch (error) {
@@ -59,6 +60,9 @@ export const update_channel = async (req, res) => {
     try {
         if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permisos' })}
         let channel_update = await prisma.channels.update({ where: { id_channel:+req.body.id_channel }, data: req.body });
+
+        //await deleteCachedData(`channels:*`);
+
         return res.json(channel_update)
     } catch (error) {
         console.error('Error updating channel:', error);
@@ -77,6 +81,7 @@ export const delete_channel = async (req, res) => {
         const channel_delete = await prisma.channels.update({where:{ id_channel:+req.params.id},data:{status_channel: false}})
         if (channel_delete.image_channel != null){await delete_file_from_supabase(extract_file_name(channel_delete.image_channel))}
         await group_deletion_information(`Canal borrado: ${channel_delete.name} `,req.user.id_user)
+        //await deleteCachedData(`channels:${req.user.id_user}`);
         return res.json(channel_delete)
     } catch (error) {
         console.error('Error delete_channel :', error);
@@ -102,16 +107,15 @@ export const get_channel_users = async (req, res) => {
         const { id } = req.params;
 
         // Intentar obtener usuarios del canal de Redis
-        const cachedChannelUsers = await redisClient.get(`channel_users:${id}`);
+        const cachedChannelUsers = await getCachedData(`channel_users:${id}`);
 
         if (cachedChannelUsers) {
-            return res.json(JSON.parse(cachedChannelUsers));
+            return res.json(cachedChannelUsers);
         }
         const channel_users = await prisma.users_channels.findMany({where: { channel_id: +id},select: {users: {select: {id_user: true,full_name: true}}}});
 
         // Guardar usuarios del canal en caché
-        await redisClient.set(`channel_users:${id}`, JSON.stringify(channel_users), 'EX', 3600); // Expira en 1 hora
-
+        await cacheData(`channel_users:${id}`, channel_users);
         return res.json(channel_users);
     } catch (error) {
         console.error('Error get_channel_users:', error);

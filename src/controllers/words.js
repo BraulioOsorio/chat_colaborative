@@ -1,5 +1,5 @@
 import { prisma } from '../core/db/index.js';
-import { redisClient } from '../core/config/redisClient.js';
+import {  cacheData, getCachedData, deleteCachedData } from '../core/config/utils.js';
 
 export const create_word = async (req, res) => {
     try {
@@ -28,13 +28,13 @@ export const find_word = async (req, res) => {
     try {
         if (req.user.role.name !== "SUPERADMIN"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}
         
-        const cachedWords = await redisClient.get(`words:${req.params.id}`);
+        const cachedWords = await getCachedData(`words:${req.params.id}`);
         if (cachedWords) {
-            return res.json(JSON.parse(cachedWords));
+            return res.json(cachedWords);
         }
         const word = await prisma.vulgar_words.findFirst({where: {OR:[{ word: req.params.id },{ id_vulgar_words: +req.params.id}]}});
         if (!word) {return res.status(404).json({ error: 'word not found' })}
-        await redisClient.set(`words:${req.params.id}`, JSON.stringify(word), 'EX', 3600); // Expira en 1 hora
+        await cacheData(`words:${req.params.id}`, word);
         res.json(word);
     } catch (error) {
         console.error('Error find word:', error);
@@ -46,6 +46,7 @@ export const update_word = async (req, res) => {
     try {
         if (req.user.role.name !== "SUPERADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })}
         const word_update = await prisma.vulgar_words.update({where : {id_vulgar_words : req.body.id_vulgar_words},data:req.body})
+        await deleteCachedData(`words:${req.body.id_vulgar_words}`);
         return res.json(word_update)
     } catch (error) {
         console.error('Error updating user:', error);
@@ -57,6 +58,7 @@ export const delete_word = async (req, res) => {
     try {
         if (req.user.role.name !== "SUPERADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })}
         const word_delete = await prisma.users.delete({ where:{id_vulgar_words : req.params.id} });
+        await deleteCachedData(`words:${req.params.id}`);
         return res.json(word_delete)
     } catch (error) {
         console.error('Error delete user:', error);
