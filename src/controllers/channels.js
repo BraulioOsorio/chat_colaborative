@@ -187,7 +187,8 @@ export const send_message = async (req, res) => {
 
         console.log('Mensaje enviado a WebSocket:', response); // Agrega un log aquí
 
-        io.to(req.body.channel_id).emit('new_message_channel', response);
+        const clients = io.sockets.adapter.rooms.get(req.body.channel_id);
+        console.log('Clientes conectados al canal:', clients);
 
         return res.json(message_sent);
     } catch (error) {
