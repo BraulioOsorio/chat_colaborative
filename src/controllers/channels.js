@@ -185,7 +185,7 @@ export const send_message = async (req, res) => {
             users: { full_name: req.user.full_name, photo_url: req.user.photo_url, user_id: req.user.id_user }
         };
 
-        console.log('Emitiendo evento new_message_channel con datos:', response);
+        console.log(req.body.channel_id);
         io.to(req.body.channel_id).emit('new_message_channel', response);
         
         const clients = io.sockets.adapter.rooms.get(req.body.channel_id);
