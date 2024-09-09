@@ -156,47 +156,47 @@ export const send_message = async (req, res) => {
         const permissions_names = req.user.role_permission.map(rp => rp.Permissions.name);
         if (!permissions_names.includes("ENVIAR_MENSAJE") && req.user.role.name == "AGENTE")
             return res.status(401).json({ error: 'No tiene permisos de enviar mensajes' });
+
         const file = req.file;
         let storage = null;
         let type_message = 'message'
         if (file) {
-            if(!permissions_names.includes("ENVIAR_DOCUMENTO") && req.user.role.name == "AGENTE")
+            if (!permissions_names.includes("ENVIAR_DOCUMENTO") && req.user.role.name == "AGENTE")
                 return res.status(401).json({ error: 'No tiene permisos de enviar documentos' });
             
-            const relative_file_path = await upload_file_to_supabase(file)
-            storage = `${STORAGE_URL}${relative_file_path}`
-            type_message = 'file'
+            const relative_file_path = await upload_file_to_supabase(file);
+            storage = `${STORAGE_URL}${relative_file_path}`;
+            type_message = 'file';
         }
 
-        let date_time = get_current_datetime()
+        let date_time = get_current_datetime();
         const user_channel = await prisma.users_channels.findFirst({ where: { user_id: req.user.id_user, channel_id: +req.body.channel_id } });
-        if (!user_channel){return res.status(401).json({ error: 'El usuario no pertenece al canal' })};
+        if (!user_channel) {return res.status(401).json({ error: 'El usuario no pertenece al canal' });}
+
         const vulgar_words = await prisma.vulgar_words.findMany();
         const vulgar_words_set = new Set(vulgar_words.map(vw => vw.word.toLowerCase()));
         const censor_message = (content) => {
-            return content.split(' ').map(word => {return vulgar_words_set.has(word.toLowerCase()) ? '*'.repeat(word.length) : word;
+            return content.split(' ').map(word => {
+                return vulgar_words_set.has(word.toLowerCase()) ? '*'.repeat(word.length) : word;
             }).join(' ');
         };
         const censored_content = censor_message(req.body.content);
-        const message_sent = await prisma.messages.create({ data: {...req.body, content: censored_content, user_id: req.user.id_user, url_file: storage, channel_id: +req.body.channel_id, created_at: date_time, type_message: type_message } });
+        const message_sent = await prisma.messages.create({ 
+            data: { ...req.body, content: censored_content, user_id: req.user.id_user, url_file: storage, channel_id: +req.body.channel_id, created_at: date_time, type_message: type_message } 
+        });
         
         const response = {
             ...message_sent,
             users: { full_name: req.user.full_name, photo_url: req.user.photo_url, user_id: req.user.id_user }
         };
-
-        console.log(req.body.channel_id);
-        io.to(req.body.channel_id).emit('new_message_channel', response);
-        
-        const clients = io.sockets.adapter.rooms.get(req.body.channel_id);
-        console.log('Clientes conectados al canal:', clients);
-
+        io.to(+req.body.channel_id).emit('new_message_channel', response);  
         return res.json(message_sent);
     } catch (error) {
         console.error('Error send_message:', error);
         return res.status(500).json({ error: 'Error interno del servidor' });
     }
-}
+};
+
 
 export const edit_message = async (req,res) => {
     try {
