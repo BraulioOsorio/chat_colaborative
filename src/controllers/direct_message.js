@@ -107,7 +107,7 @@ export const create_conversation = async (req, res) => {
         const get_messages_validator_exist = await get_messages_conversation(req.user.id_user, req.user.id_user, req.body.recipient_id)
         const conversation = await prisma.direct_message.create({ data: { ...req.body, send_id: req.user.id_user, created_at: date_time,url_file: storage,type_message : type_message} });
         const response = {
-            ...conversation,user:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
+            ...conversation,user_send:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         const room_key = create_room_key(conversation.send_id, conversation.recipient_id)
         io.to(room_key).emit('new_conversation_direct', response);
