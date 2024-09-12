@@ -7,20 +7,22 @@ import multer from 'multer';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 import zlib from 'zlib';
+import util from 'util';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const upload = multer({
   storage: multer.memoryStorage(),
-  // limits: { fileSize: 1 * 1024 * 1024 }, 1 MB
+  limits: { fileSize: 1 * 1024 * 1024 },
 });
 
+const gzip = util.promisify(zlib.gzip);
+
 export const upload_file_to_supabase = async (file) => {
-  const compressed_buffer = zlib.gzipSync(file.buffer);
-  
-  const file_name = `${uuidv4()}\\${file.originalname}`
+  const file_name = `${uuidv4()}\\${file.originalname}.gz`;
+  const compressedBuffer = await gzip(file.buffer);
   const { data, error } = await supabase.storage
       .from('Storage Chat Internal')
-      .upload(file_name, compressed_buffer, {
+      .upload(file_name, compressedBuffer, {
           contentType: file.mimetype,
           upsert: false,
       });
@@ -33,7 +35,7 @@ export const upload_file_to_supabase = async (file) => {
 export const delete_file_from_supabase = async (file_name) => {
   try {
     const { error } = await supabase.storage
-      .from('Storage Chat Internal') 
+      .from('Storage Chat Internal')
       .remove([file_name]);
     if (error) {throw new Error(`Error deleting file: ${error.message}`)}
   } catch (error) {
