@@ -36,7 +36,7 @@ export const upload_file_to_supabase = async (file) => {
   if (file.mimetype.startsWith('image/')) {
     compressedBuffer = await compress_image(file.buffer);
   } else {
-    compressedBuffer = await compress_file(file.buffer);
+    compressedBuffer = file.buffer;
   }
 
   const file_name = `${uuidv4()}/${file.originalname}`;
