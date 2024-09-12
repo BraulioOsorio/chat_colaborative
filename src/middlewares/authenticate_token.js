@@ -6,16 +6,43 @@ import tokens from '../controllers/tokens.js';
 import multer from 'multer';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
+import sharp from 'sharp';
+import zlib from 'zlib'; 
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const upload = multer({
   storage: multer.memoryStorage(),
 });
+
+const compress_image = async (buffer) => {
+  return sharp(buffer)
+    .jpeg({ quality: 80 }) 
+    .toBuffer();
+};
+
+const compress_file = async (buffer) => {
+  return new Promise((resolve, reject) => {
+    zlib.gzip(buffer, (err, compressedBuffer) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(compressedBuffer);
+      }
+    });
+  });
+};
 export const upload_file_to_supabase = async (file) => {
-  const file_name = `${uuidv4()}\\${file.originalname}`;
+  let compressedBuffer;
+  if (file.mimetype.startsWith('image/')) {
+    compressedBuffer = await compress_image(file.buffer);
+  } else {
+    compressedBuffer = await compress_file(file.buffer);
+  }
+
+  const file_name = `${uuidv4()}/${file.originalname}`;
   const { data, error } = await supabase.storage
       .from('Storage Chat Internal')
-      .upload(file_name, file.buffer, {
+      .upload(file_name, compressedBuffer, {
           contentType: file.mimetype,
           upsert: false,
       });
@@ -24,6 +51,7 @@ export const upload_file_to_supabase = async (file) => {
   }
   return file_name;
 };
+
 export const delete_file_from_supabase = async (file_name) => {
   try {
     const { error } = await supabase.storage
