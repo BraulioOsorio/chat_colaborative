@@ -11,6 +11,7 @@ import zlib from 'zlib';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const upload = multer({
   storage: multer.memoryStorage(),
+  // limits: { fileSize: 1 * 1024 * 1024 }, 1 MB
 });
 
 export const upload_file_to_supabase = async (file) => {
