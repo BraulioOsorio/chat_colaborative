@@ -165,6 +165,9 @@ export const send_message = async (req, res) => {
                 return res.status(401).json({ error: 'No tiene permisos de enviar documentos' });
             
             const relative_file_path = await upload_file_to_supabase(file);
+            if(!relative_file_path.success){
+                return res.status(400).json({ error: relative_file_path.message });
+            }
             storage = `${STORAGE_URL}${relative_file_path}`;
             type_message = 'file';
         }

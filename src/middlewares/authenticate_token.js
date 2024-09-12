@@ -32,6 +32,11 @@ const compress_file = async (buffer) => {
   });
 };
 export const upload_file_to_supabase = async (file) => {
+  const MAX_FILE_SIZE_MB = 5;
+  const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+  if (file.size >= MAX_FILE_SIZE_BYTES) {
+    return { success: false, message: `El archivo es demasiado grande. El tamaño máximo permitido es ${MAX_FILE_SIZE_MB} MB.` };
+  }
   let compressedBuffer;
   if (file.mimetype.startsWith('image/')) {
     compressedBuffer = await compress_image(file.buffer);

@@ -100,6 +100,9 @@ export const create_conversation = async (req, res) => {
         let type_message = 'message'
         if (file) {
             const relative_file_path = await upload_file_to_supabase(file)
+            if(!relative_file_path.success){
+                return res.status(400).json({ error: relative_file_path.message });
+            }
             storage = `${STORAGE_URL}${relative_file_path}`
             type_message = 'file'
         }
