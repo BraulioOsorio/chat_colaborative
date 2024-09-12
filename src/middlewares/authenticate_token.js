@@ -6,23 +6,16 @@ import tokens from '../controllers/tokens.js';
 import multer from 'multer';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import zlib from 'zlib';
-import util from 'util';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 1 * 1024 * 1024 },
 });
-
-const gzip = util.promisify(zlib.gzip);
-
 export const upload_file_to_supabase = async (file) => {
-  const file_name = `${uuidv4()}\\${file.originalname}.gz`;
-  const compressedBuffer = await gzip(file.buffer);
+  const file_name = `${uuidv4()}\\${file.originalname}`;
   const { data, error } = await supabase.storage
       .from('Storage Chat Internal')
-      .upload(file_name, compressedBuffer, {
+      .upload(file_name, file.buffer, {
           contentType: file.mimetype,
           upsert: false,
       });
@@ -31,11 +24,10 @@ export const upload_file_to_supabase = async (file) => {
   }
   return file_name;
 };
-
 export const delete_file_from_supabase = async (file_name) => {
   try {
     const { error } = await supabase.storage
-      .from('Storage Chat Internal')
+      .from('Storage Chat Internal') 
       .remove([file_name]);
     if (error) {throw new Error(`Error deleting file: ${error.message}`)}
   } catch (error) {
@@ -96,6 +88,7 @@ export const authenticate_token = async (req, res, next) => {
   next();
 };
 
+
 export const authenticate_token_messages = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -108,6 +101,5 @@ export const authenticate_token_messages = async (req, res, next) => {
   }
   next(null, result.user);
 };
-
 export const upload_middleware = upload;
 export default upload;
