@@ -9,9 +9,9 @@ import { differenceInMinutes } from 'date-fns';
 export const delete_message = async (req, res) => {
     try {
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.params.id } })
-        if (req.user.id_user !== direct_message.send_id){return res.status(401).json({ error: 'El usuario no tiene permisos ' })};
+        if (req.user.id_user !== direct_message.send_id){return res.status(403).json({ error: 'El usuario no tiene permisos ' })};
         const minutes_Difference = differenceInMinutes(date_time, new Date(direct_message.created_at));
-        if(minutes_Difference > 20){return res.status(401).json({ status: false,msg:"Tiempo para Actualización agotado" })}
+        if(minutes_Difference > 20){return res.status(403).json({ status: false,msg:"Tiempo para Actualización agotado" })}
         let message_deleted = await prisma.direct_message.delete({ where: { id_direct_message: +req.params.id } })
         const room_key = create_room_key(message_deleted.send_id, message_deleted.recipient_id)
         io.to(room_key).emit('conversation_delete_direct', message_deleted);
@@ -27,10 +27,10 @@ export const update_message = async (req, res) => {
     try {
         let date_time = get_current_datetime()
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.body.id_direct_message } })
-        if (!direct_message) {return res.status(401).json({ error: 'El mensage no existe' });}
-        if (req.user.id_user !== direct_message.send_id){return res.status(401).json({ error: 'El usuario no tiene permisos ' })};
+        if (!direct_message) {return res.status(403).json({ error: 'El mensage no existe' });}
+        if (req.user.id_user !== direct_message.send_id){return res.status(403).json({ error: 'El usuario no tiene permisos ' })};
         const minutes_Difference = differenceInMinutes(date_time, new Date(direct_message.created_at));
-        if(minutes_Difference > 20){return res.status(401).json({ status: false,msg:"Tiempo para Actualización agotado" })}
+        if(minutes_Difference > 20){return res.status(403).json({ status: false,msg:"Tiempo para Actualización agotado" })}
         let message_updated = await prisma.direct_message.update({ where: { id_direct_message: +req.body.id_direct_message }, data: req.body })
         const room_key = create_room_key(message_updated.send_id, message_updated.recipient_id)
         const response = {
@@ -101,7 +101,7 @@ export const create_conversation = async (req, res) => {
         if (file) {
             const relative_file_path = await upload_file_to_supabase(file)
             if(!relative_file_path.success){
-                return res.status(400).json({ error: relative_file_path.message });
+                return res.status(403).json({ error: relative_file_path.message });
             } 
             storage = `${STORAGE_URL}${relative_file_path.file_name}`
             type_message = 'file'

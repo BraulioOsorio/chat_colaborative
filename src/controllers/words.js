@@ -3,7 +3,7 @@ import {  cacheData, getCachedData, deleteCachedData } from '../core/config/util
 
 export const create_word = async (req, res) => {
     try {
-        if(req.user.role.name === "ADMIN" || req.user.role.name === "AGENTE"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+        if(req.user.role.name === "ADMIN" || req.user.role.name === "AGENTE"){return res.status(403).json({ error: 'El usuario no tiene permiso' })}
         const new_word = await prisma.vulgar_words.create({data:req.body});
         return res.json(new_word);
     } catch (error) {
@@ -26,7 +26,7 @@ export const get_words = async (req, res) => {
 
 export const find_word = async (req, res) => {
     try {
-        if (req.user.role.name !== "SUPERADMIN"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+        if (req.user.role.name !== "SUPERADMIN"){return res.status(403).json({ error: 'El usuario no tiene permiso' })}
         
         const cachedWords = await getCachedData(`words:${req.params.id}`);
         if (cachedWords) {
@@ -44,7 +44,7 @@ export const find_word = async (req, res) => {
 
 export const update_word = async (req, res) => {
     try {
-        if (req.user.role.name !== "SUPERADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+        if (req.user.role.name !== "SUPERADMIN") {return res.status(403).json({ error: 'El usuario no tiene permiso' })}
         const word_update = await prisma.vulgar_words.update({where : {id_vulgar_words : req.body.id_vulgar_words},data:req.body})
         await deleteCachedData(`words:${req.body.id_vulgar_words}`);
         return res.json(word_update)
@@ -56,7 +56,7 @@ export const update_word = async (req, res) => {
 
 export const delete_word = async (req, res) => {
     try {
-        if (req.user.role.name !== "SUPERADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+        if (req.user.role.name !== "SUPERADMIN") {return res.status(403).json({ error: 'El usuario no tiene permiso' })}
         const word_delete = await prisma.users.delete({ where:{id_vulgar_words : req.params.id} });
         await deleteCachedData(`words:${req.params.id}`);
         return res.json(word_delete)

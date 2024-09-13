@@ -23,7 +23,7 @@ export const create_channel = async (req,res) => {
             storage = `${STORAGE_URL}${relative_file_path}`
         }
         let date_time = get_current_datetime()
-        if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })};
+        if (req.user.role.name !== "ADMIN") {return res.status(403).json({ error: 'El usuario no tiene permiso' })};
         const { name, description, user_ids } = req.body;
         const all_user_ids = [req.user.id_user, ...user_ids];
         const new_channel = await prisma.channels.create({data: { name, description,created_at:date_time,image_channel:storage }});
@@ -57,7 +57,7 @@ export const get_channels = async (req, res) => {
 
 export const update_channel = async (req, res) => {
     try {
-        if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permisos' })}
+        if (req.user.role.name !== "ADMIN") {return res.status(403).json({ error: 'El usuario no tiene permisos' })}
         let channel_update = await prisma.channels.update({ where: { id_channel:+req.body.id_channel }, data: req.body });
         //await deleteCachedData(`channels:*`);
         return res.json(channel_update)
@@ -69,7 +69,7 @@ export const update_channel = async (req, res) => {
 
 export const delete_channel = async (req, res) => {
     try {
-        if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permisos' })}
+        if (req.user.role.name !== "ADMIN") {return res.status(403).json({ error: 'El usuario no tiene permisos' })}
         const find_user_admin = await prisma.channels.findMany({ where: { users_channels: { some: { user_id: req.user.id_user } } } });
         const is_user_in_channel = find_user_admin.some(channel => channel.id_channel === +req.params.id);
         if (!is_user_in_channel) {return res.status(403).json({ error: 'User does not have access to this channel' })};
@@ -88,7 +88,7 @@ export const delete_channel = async (req, res) => {
 
 export const insert_users_channel = async (req, res) => {
     try {
-        if (req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })};
+        if (req.user.role.name !== "ADMIN") {return res.status(403).json({ error: 'El usuario no tiene permiso' })};
         const { id_channel, user_ids } = req.body;
         const user_channels_data = user_ids.map(user_id => ({user_id,channel_id: id_channel}));
         const inserts = await prisma.users_channels.createMany({data:user_channels_data});
@@ -155,18 +155,18 @@ export const send_message = async (req, res) => {
         });
         const permissions_names = req.user.role_permission.map(rp => rp.Permissions.name);
         if (!permissions_names.includes("ENVIAR_MENSAJE") && req.user.role.name == "AGENTE")
-            return res.status(401).json({ error: 'No tiene permisos de enviar mensajes' });
+            return res.status(403).json({ error: 'No tiene permisos de enviar mensajes' });
 
         const file = req.file;
         let storage = null;
         let type_message = 'message'
         if (file) {
             if (!permissions_names.includes("ENVIAR_DOCUMENTO") && req.user.role.name == "AGENTE")
-                return res.status(401).json({ error: 'No tiene permisos de enviar documentos' });
+                return res.status(403).json({ error: 'No tiene permisos de enviar documentos' });
             
             const relative_file_path = await upload_file_to_supabase(file);
             if(!relative_file_path.success){
-                return res.status(400).json({ error: relative_file_path.message });
+                return res.status(403).json({ error: relative_file_path.message });
             }
             storage = `${STORAGE_URL}${relative_file_path.file_name}`;
             type_message = 'file';
@@ -174,7 +174,7 @@ export const send_message = async (req, res) => {
 
         let date_time = get_current_datetime();
         const user_channel = await prisma.users_channels.findFirst({ where: { user_id: req.user.id_user, channel_id: +req.body.channel_id } });
-        if (!user_channel) {return res.status(401).json({ error: 'El usuario no pertenece al canal' });}
+        if (!user_channel) {return res.status(403).json({ error: 'El usuario no pertenece al canal' });}
 
         const vulgar_words = await prisma.vulgar_words.findMany();
         const vulgar_words_set = new Set(vulgar_words.map(vw => vw.word.toLowerCase()));
@@ -205,9 +205,9 @@ export const edit_message = async (req,res) => {
     try {
         let date_time = get_current_datetime()
         const user_message = await prisma.messages.findUnique({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
-        if (!user_message){return res.status(401).json({ status: false,msg:"no tiene permisos de editar otro msg " })};
+        if (!user_message){return res.status(403).json({ status: false,msg:"no tiene permisos de editar otro msg " })};
         const minutes_Difference = differenceInMinutes(date_time, new Date(user_message.created_at));
-        if(minutes_Difference > 20){return res.status(401).json({ status: false,msg:"Tiempo para actualización agotado" })}
+        if(minutes_Difference > 20){return res.status(403).json({ status: false,msg:"Tiempo para actualización agotado" })}
         const vulgar_words = await prisma.vulgar_words.findMany();
         const vulgar_words_set = new Set(vulgar_words.map(vw => vw.word.toLowerCase()));
         const censor_message = (content) => {
@@ -231,9 +231,9 @@ export const delete_message = async (req,res) => {
     try {
         let date_time = get_current_datetime()
         const user_message = await prisma.messages.findUnique({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
-        if (!user_message) {return res.status(401).json({ status: false,msg:"no tiene permisos de borrar otro msg " })};
+        if (!user_message) {return res.status(403).json({ status: false,msg:"no tiene permisos de borrar otro msg " })};
         const minutes_Difference = differenceInMinutes(date_time, new Date(user_message.created_at));
-        if(minutes_Difference > 20){return res.status(401).json({ status: false,msg:"Tiempo para eliminación agotado" })}
+        if(minutes_Difference > 20){return res.status(403).json({ status: false,msg:"Tiempo para eliminación agotado" })}
         const message_delete = await prisma.messages.delete({where:{id_message:+req.body.id_message}})
         const response = {
             ...message_delete,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}

@@ -3,7 +3,7 @@ import {  cacheData, getCachedData } from '../core/config/utils.js';
 
 export const get_roles = async (req, res) => {
     try {
-        if (req.user.role.name !== "SUPERADMIN") {return res.status(401).json({ error: 'El usuario no tiene permisos' })}
+        if (req.user.role.name !== "SUPERADMIN") {return res.status(403).json({ error: 'El usuario no tiene permisos' })}
         const cachedRoles = await getCachedData(`roles`);
         if (cachedRoles) {
             return res.json(cachedRoles);

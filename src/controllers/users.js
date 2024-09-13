@@ -25,7 +25,7 @@ export const create_user = async (req, res) => {
         } else if (req.user.role.name === "SUPERADMIN") { 
             id_rol = req.body.role_id === 2 ? 2 : 3;
         } else {
-            return res.status(401).json({ error: 'El usuario no tiene permiso' });
+            return res.status(403).json({ error: 'El usuario no tiene permiso' });
         }
         const new_user = await prisma.users.create({data: { ...req.body, id_user: generate_user_id(35), password: hashSync(req.body.password, 10), role_id: id_rol,photo_url:storage}});
         if(id_rol ===3){await prisma.user_permissions.create({data:{permission_id:1 ,user_id:new_user.id_user }})}
@@ -82,7 +82,7 @@ export const get_users = async (req, res) => {
             users = await prisma.users.findMany({ skip:skip, take:limit, where: { role: { name: "AGENTE" } }, include: { role: true } })
             total_users = await prisma.users.count({where:{role:{name:"AGENTE"}}}); 
         }else{
-            return res.status(401).json({ error: 'El usuario no tiene permisos' })    
+            return res.status(403).json({ error: 'El usuario no tiene permisos' })    
         }
         const total_pages = Math.ceil(total_users / limit);
         if (limit > total_pages) {return res.status(400).json({ error: `La página solicitada (${page}) excede el número total de páginas (${total_pages})` })}
@@ -99,7 +99,7 @@ export const get_users = async (req, res) => {
 
 export const find_user = async (req, res) => {
     try {
-        if (req.user.role.name === "AGENTE"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}    
+        if (req.user.role.name === "AGENTE"){return res.status(403).json({ error: 'El usuario no tiene permiso' })}    
 
         const cachedUser = await getCachedData(`user:${req.params.id}`);
         if (cachedUser) {
@@ -150,7 +150,7 @@ export const update_user = async (req, res) => {
         if (!find_user_proccess || !find_user_proccess.id_user) {return find_user_proccess}
         let user_update = null;
         let id_user_update = find_user_proccess.id_user;
-        if ((req.user.role.name === "AGENTE" && req.body.role_id) || (req.user.role.name === "ADMIN" && req.body.role_id) ){return res.status(401).json({ error: 'No puede actualizar su rol' })}
+        if ((req.user.role.name === "AGENTE" && req.body.role_id) || (req.user.role.name === "ADMIN" && req.body.role_id) ){return res.status(403).json({ error: 'No puede actualizar su rol' })}
         if (req.body.password) {
             const hashed_password = await bcrypt.hash(req.body.password, 10);
             user_update = await prisma.users.update({ where: { id_user: id_user_update }, data: { ...req.body, password: hashed_password } });

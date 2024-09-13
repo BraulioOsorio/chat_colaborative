@@ -2,7 +2,7 @@ import { prisma } from '../core/db/index.js';
 
 export const get_permissions = async (req, res) => {
     try {
-        if (req.user.role.name !== "SUPERADMIN" || req.user.role.name !== "ADMIN") {return res.status(401).json({ error: 'El usuario no tiene permisos' })}
+        if (req.user.role.name !== "SUPERADMIN" || req.user.role.name !== "ADMIN") {return res.status(403).json({ error: 'El usuario no tiene permisos' })}
         const permission_consult = await prisma.permissions.findMany();
         return res.json(permission_consult)
     } catch (error) {

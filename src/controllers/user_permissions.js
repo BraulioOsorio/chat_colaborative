@@ -3,7 +3,7 @@ import {  cacheData, getCachedData, deleteCachedData } from '../core/config/util
 
 export const assign_permission = async (req, res) => {    
     try {
-        if (req.user.role.name !== "ADMIN" && req.user.role.name !== "SUPERADMIN"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+        if (req.user.role.name !== "ADMIN" && req.user.role.name !== "SUPERADMIN"){return res.status(403).json({ error: 'El usuario no tiene permiso' })}
         const permissions = req.body.permissions;
         const created_permissions = [];
         for (const permission of permissions) {
@@ -19,7 +19,7 @@ export const assign_permission = async (req, res) => {
 
 export const update_user_permissions = async (req, res) => {
     try {
-        if (req.user.role.name !== "ADMIN" && req.user.role.name !== "SUPERADMIN"){return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+        if (req.user.role.name !== "ADMIN" && req.user.role.name !== "SUPERADMIN"){return res.status(403).json({ error: 'El usuario no tiene permiso' })}
 
         await deleteCachedData(`permissions:${req.params.id}`);
 
@@ -52,7 +52,7 @@ export const find_user_permissions = async (req, res) => {
 
 export const delete_user_permissions = async (req, res) => {
     try {
-        if (req.user.role.name !== "ADMIN" && req.user.role.name !== "SUPERADMIN") {return res.status(401).json({ error: 'El usuario no tiene permiso' })}
+        if (req.user.role.name !== "ADMIN" && req.user.role.name !== "SUPERADMIN") {return res.status(403).json({ error: 'El usuario no tiene permiso' })}
         const { ids } = req.body;
         const deleted_permissions = [];
         for (const id of ids) {
