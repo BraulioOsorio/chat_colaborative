@@ -44,7 +44,7 @@ export const upload_file_to_supabase = async (file) => {
     compressedBuffer = file.buffer;
   }
 
-  const file_name = `${uuidv4()}+${file.originalname}`;
+  const file_name = `${uuidv4()}/${file.originalname}`;
   const { data, error } = await supabase.storage
       .from('Storage Chat Internal')
       .upload(file_name, compressedBuffer, {
