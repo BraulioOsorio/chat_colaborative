@@ -168,7 +168,7 @@ export const send_message = async (req, res) => {
             if(!relative_file_path.success){
                 return res.status(400).json({ error: relative_file_path.message });
             }
-            storage = `${STORAGE_URL}${elative_file_path.file_name}`;
+            storage = `${STORAGE_URL}${relative_file_path.file_name}`;
             type_message = 'file';
         }
 
