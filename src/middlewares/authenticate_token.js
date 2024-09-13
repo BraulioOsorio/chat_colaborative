@@ -16,7 +16,7 @@ const upload = multer({
 
 const compress_image = async (buffer) => {
   return sharp(buffer)
-    .jpeg({ quality: 80 }) 
+    .jpeg({ quality: 85 }) 
     .toBuffer();
 };
 
