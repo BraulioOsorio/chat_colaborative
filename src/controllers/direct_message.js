@@ -102,8 +102,8 @@ export const create_conversation = async (req, res) => {
             const relative_file_path = await upload_file_to_supabase(file)
             if(!relative_file_path.success){
                 return res.status(400).json({ error: relative_file_path.message });
-            }
-            storage = `${STORAGE_URL}${relative_file_path}`
+            } 
+            storage = `${STORAGE_URL}${relative_file_path.file_name}`
             type_message = 'file'
         }
         let date_time = get_current_datetime()

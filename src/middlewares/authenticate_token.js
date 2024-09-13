@@ -43,7 +43,6 @@ export const upload_file_to_supabase = async (file) => {
   } else {
     compressedBuffer = file.buffer;
   }
-
   const file_name = `${uuidv4()}/${file.originalname}`;
   const { data, error } = await supabase.storage
       .from('Storage Chat Internal')
@@ -54,7 +53,7 @@ export const upload_file_to_supabase = async (file) => {
   if (error) {
       throw new Error(error.message);
   }
-  return file_name;
+  return { success: true, file_name: file_name };
 };
 
 export const delete_file_from_supabase = async (file_name) => {
