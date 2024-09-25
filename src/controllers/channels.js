@@ -76,7 +76,11 @@ export const delete_channel = async (req, res) => {
         await prisma.users_channels.deleteMany({where:{channel_id:+req.params.id } })
         await prisma.messages.deleteMany({where:{channel_id:+req.params.id } })
         const channel_delete = await prisma.channels.update({where:{ id_channel:+req.params.id},data:{status_channel: false}})
-        if (channel_delete.image_channel != null){await delete_file_from_supabase(extract_file_name(channel_delete.image_channel))}
+        if (channel_delete.image_channel != null){
+            if(channel_delete.image_channel != `${STORAGE_URL}default.png`){
+                await delete_file_from_supabase(extract_file_name(channel_delete.image_channel))
+            }
+        }
         await group_deletion_information(`Canal borrado: ${channel_delete.name} `,req.user.id_user)
         //await deleteCachedData(`channels:${req.user.id_user}`);
         return res.json(channel_delete)
