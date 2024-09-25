@@ -240,7 +240,11 @@ export const delete_message = async (req,res) => {
         };
         io.to(message_delete.channel_id).emit('delete_message_channel', response);
         console.log(message_delete)
-        if (message_delete.url_file != null && message_delete.url_file != `${STORAGE_URL}default.png`){await delete_file_from_supabase(extract_file_name(message_delete.url_file))}
+        if (message_delete.url_file != null){
+            if(message_delete.url_file != `${STORAGE_URL}default.png`){
+                await delete_file_from_supabase(extract_file_name(message_delete.url_file))
+            }
+        }
         return res.json(message_delete);
     } catch (error) {
         console.error('Error delete_message:', error);
