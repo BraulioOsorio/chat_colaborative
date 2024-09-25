@@ -239,7 +239,7 @@ export const delete_message = async (req,res) => {
             ...message_delete,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
         };
         io.to(message_delete.channel_id).emit('delete_message_channel', response);
-        console.log(message_delete)
+   
         if (message_delete.url_file != null){
             if(message_delete.url_file != `${STORAGE_URL}default.png`){
                 await delete_file_from_supabase(extract_file_name(message_delete.url_file))
