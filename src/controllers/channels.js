@@ -208,7 +208,7 @@ export const send_message = async (req, res) => {
 export const edit_message = async (req,res) => {
     try {
         let date_time = get_current_datetime()
-        const user_message = await prisma.messages.findUnique({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
+        const user_message = await prisma.messages.findFirst({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
         if (!user_message){return res.status(403).json({ status: false,msg:"no tiene permisos de editar otro msg " })};
         const minutes_Difference = differenceInMinutes(date_time, new Date(user_message.created_at));
         if(minutes_Difference > 20){return res.status(403).json({ status: false,msg:"Tiempo para actualización agotado" })}
@@ -234,7 +234,7 @@ export const edit_message = async (req,res) => {
 export const delete_message = async (req,res) => {
     try {
         let date_time = get_current_datetime()
-        const user_message = await prisma.messages.findUnique({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
+        const user_message = await prisma.messages.findFirst({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
         if (!user_message) {return res.status(403).json({ status: false,msg:"no tiene permisos de borrar otro msg " })};
         const minutes_Difference = differenceInMinutes(date_time, new Date(user_message.created_at));
         if(minutes_Difference > 20){return res.status(403).json({ status: false,msg:"Tiempo para eliminación agotado" })}
