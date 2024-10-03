@@ -234,10 +234,12 @@ export const edit_message = async (req,res) => {
 export const delete_message = async (req,res) => {
     try {
         let date_time = get_current_datetime()
-        const user_message = await prisma.messages.findFirst({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
-        if (!user_message) {return res.status(403).json({ status: false,msg:"no tiene permisos de borrar otro msg " })};
-        const minutes_Difference = differenceInMinutes(date_time, new Date(user_message.created_at));
-        if(minutes_Difference > 20){return res.status(403).json({ status: false,msg:"Tiempo para eliminación agotado" })}
+        if(req.user.role.name !== "ADMIN"){
+            const user_message = await prisma.messages.findFirst({where:{id_message:+req.body.id_message,user_id:req.user.id_user}})
+            if (!user_message) {return res.status(403).json({ status: false,msg:"no tiene permisos de borrar otro msg " })};
+            const minutes_Difference = differenceInMinutes(date_time, new Date(user_message.created_at));
+            if(minutes_Difference > 20){return res.status(403).json({ status: false,msg:"Tiempo para eliminación agotado" })}
+        }
         const message_delete = await prisma.messages.delete({where:{id_message:+req.body.id_message}})
         const response = {
             ...message_delete,users:{full_name: req.user.full_name,photo_url:req.user.photo_url,user_id:req.user.id_user}
