@@ -26,7 +26,7 @@ export const delete_group_messages = async (req, res) => {
     } catch (error) {
         console.error('Error delete_group_messages:', error);
         return res.status(500).json({ error: 'Internal Server Error delete_group_messages' });
-    }
+    } 
 };
 
 export const group_deletion_information = async (description,user_id) => {
