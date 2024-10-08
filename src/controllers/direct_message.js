@@ -8,6 +8,7 @@ import { STORAGE_URL } from '../core/config/config.js';
 import { differenceInMinutes } from 'date-fns';
 export const delete_message = async (req, res) => {
     try {
+        let date_time = get_current_datetime()
         let direct_message = await prisma.direct_message.findFirst({ where: { id_direct_message: +req.params.id } })
         if (req.user.id_user !== direct_message.send_id){return res.status(403).json({ error: 'El usuario no tiene permisos ' })};
         const minutes_Difference = differenceInMinutes(date_time, new Date(direct_message.created_at));
