@@ -58,24 +58,30 @@ export const get_users = async (req, res) => {
         const page = +req.query.page || 1;
         const limit = +req.query.limit || 10;
         const skip = (page - 1) * limit;
-        let users,total_users;
+        let cacheKey = `users:${page}:${limit}`;
+
+        let users, total_users;
         if (req.user.role.name === "SUPERADMIN") {
-            const cacheKey = `users:${page}:${limit}`;
+            cacheKey = `users:${page}:${limit}:SUPERADMIN`;
             const cachedUsers = await getCachedData(cacheKey);
             
             if (cachedUsers) {
-                console.log('Cache hit get_users');
+                console.log('Cache hit get_users SUPERADMIN');
                 return res.json(cachedUsers);
             }
 
-            users = await prisma.users.findMany({skip: skip,take: limit,include: {role: true,tokens: true}});
+            users = await prisma.users.findMany({
+                skip: skip,
+                take: limit,
+                include: { role: true, tokens: true }
+            });
             total_users = await prisma.users.count(); 
         } else if (req.user.role.name === "ADMIN") {
-            const cacheKey = `users:${page}:${limit}`;
+            cacheKey = `users:${page}:${limit}:ADMIN`;
             const cachedUsers = await getCachedData(cacheKey);
 
             if (cachedUsers) {
-                console.log('Cache hit get_users');
+                console.log('Cache hit get_users ADMIN');
                 return res.json(cachedUsers);
             }
 
@@ -85,11 +91,18 @@ export const get_users = async (req, res) => {
             return res.status(403).json({ error: 'El usuario no tiene permisos' })    
         }
         const total_pages = Math.ceil(total_users / limit);
-        if (limit > total_pages) {return res.status(400).json({ error: `La página solicitada (${page}) excede el número total de páginas (${total_pages})` })}
+        if (total_users === 0) {
+            return res.json({page: 1, limit, total_pages: 0, total_users: 0, users: []});
+        }
+        if (page > total_pages) {
+            return res.status(400).json({ error: `La página solicitada (${page}) excede el número total de páginas (${total_pages})` });
+        }
 
         const result = {page,limit,total_pages,total_users,users};
         await cacheData(cacheKey, result);
-        
+        console.log('User role:', req.user.role.name);
+        console.log('Users fetched:', users.length);
+        console.log('Total users:', total_users);
         return res.json({page,limit,total_pages,total_users,users});
     } catch (error) {
         console.error('Error get user:', error);
