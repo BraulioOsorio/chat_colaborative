@@ -16,18 +16,35 @@ export const create_user = async (req, res) => {
     const file = req.file;
     let storage = `${STORAGE_URL}default.png`
     if (file) {
-        const relative_file_path = await upload_file_to_supabase(file)
-        storage = `${STORAGE_URL}${relative_file_path}`
+        try {
+            const upload_result = await upload_file_to_supabase(file)
+            if (upload_result.success) {
+                storage = `${STORAGE_URL}${upload_result.file_name}`
+            } else {
+                console.error("Error uploading file:", upload_result.message);
+            }
+        } catch (error) {
+            console.error("Error uploading file:", error.message);
+        }
     }
     try {
         if (req.user.role.name === "ADMIN") {
             id_rol = 3;
         } else if (req.user.role.name === "SUPERADMIN") { 
-            id_rol = req.body.role_id === 2 ? 2 : 3;
+            id_rol = parseInt(req.body.role_id, 10);
         } else {
             return res.status(403).json({ error: 'El usuario no tiene permiso' });
         }
-        const new_user = await prisma.users.create({data: { ...req.body, id_user: generate_user_id(35), password: hashSync(req.body.password, 10), role_id: id_rol,photo_url:storage}});
+        const new_user = await prisma.users.create({
+            data: {
+                id_user: generate_user_id(35),
+                network_user: req.body.network_user,
+                full_name: req.body.full_name,
+                password: hashSync(req.body.password, 10),
+                role_id: id_rol,
+                photo_url: storage,
+            }
+        });
         if(id_rol ===3){await prisma.user_permissions.create({data:{permission_id:1 ,user_id:new_user.id_user }})}
         return res.json(new_user);
     } catch (error) {
@@ -208,5 +225,3 @@ export const delete_user = async (req, res) => {
 export default {
     create_user,delete_user,update_user,get_users,find_user,find_user_name,login_information
 };
-
-
