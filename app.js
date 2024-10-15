@@ -30,9 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Escuchar token renovado
     socket.on('token_renewed', (data) => {
-        console.log("h ",data);
         
-        console.log('Nuevo Token:', data.token_new); // Imprime el nuevo token en la consola
+        
+        
         tokenInfoDiv.innerText = `Token Renovado: ${data.token_new}`;
     });
     socket.on('error', (error) => {

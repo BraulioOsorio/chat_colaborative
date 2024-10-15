@@ -83,7 +83,7 @@ export const get_users = async (req, res) => {
             const cachedUsers = await getCachedData(cacheKey);
             
             if (cachedUsers) {
-                console.log('Cache hit get_users SUPERADMIN');
+                
                 return res.json(cachedUsers);
             }
 
@@ -98,7 +98,7 @@ export const get_users = async (req, res) => {
             const cachedUsers = await getCachedData(cacheKey);
 
             if (cachedUsers) {
-                console.log('Cache hit get_users ADMIN');
+                
                 return res.json(cachedUsers);
             }
 
@@ -117,9 +117,9 @@ export const get_users = async (req, res) => {
 
         const result = {page,limit,total_pages,total_users,users};
         await cacheData(cacheKey, result);
-        console.log('User role:', req.user.role.name);
-        console.log('Users fetched:', users.length);
-        console.log('Total users:', total_users);
+        
+        
+        
         return res.json({page,limit,total_pages,total_users,users});
     } catch (error) {
         console.error('Error get user:', error);
@@ -133,7 +133,7 @@ export const find_user = async (req, res) => {
 
         const cachedUser = await getCachedData(`user:${req.params.id}`);
         if (cachedUser) {
-            console.log('Cache hit find_user');
+            
             return res.json(cachedUser);
         }
         const user = await prisma.users.findUnique({ where: { id_user: req.params.id } });
@@ -158,7 +158,7 @@ export const find_user_name = async (req, res) => {
 
         const cachedUser = await getCachedData(`user:${network_user}`);
         if (cachedUser) {
-            console.log('Cache hit find_user_name');
+            
             return res.json(cachedUser);
         }
 
@@ -226,7 +226,7 @@ export const delete_user = async (req, res) => {
         // Invalidate user list cache
         await invalidateUserListCache();
 
-        console.log('User deleted, cache invalidated');
+        
 
         return res.json(user_delete)
     } catch (error) {
