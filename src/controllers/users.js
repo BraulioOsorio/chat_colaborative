@@ -205,7 +205,6 @@ export const delete_user = async (req, res) => {
         let id_user_delete = find_user_proccess.id_user;
         let user_status = find_user_proccess.status_user;
         const user_delete = await prisma.users.update({ where: { id_user: id_user_delete }, data: { status_user: user_status = user_status ? false : true } });
-        await delete_file_from_supabase(extract_file_name(user_delete.photo_url))
         
         if (user_delete.photo_url != null){
             if(user_delete.photo_url != `${STORAGE_URL}default.png`){
