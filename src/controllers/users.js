@@ -204,13 +204,14 @@ export const delete_user = async (req, res) => {
         if (!find_user_proccess || !find_user_proccess.id_user) {return find_user_proccess}
         let id_user_delete = find_user_proccess.id_user;
         let user_status = find_user_proccess.status_user;
-        const user_delete = await prisma.users.update({ where: { id_user: id_user_delete }, data: { status_user: user_status = user_status ? false : true } });
-        
-        if (user_delete.photo_url != null){
-            if(user_delete.photo_url != `${STORAGE_URL}default.png`){
-                await delete_file_from_supabase(extract_file_name(user_delete.photo_url))
+        const user_find = await prisma.users.update({ where: { id_user: id_user_delete }});
+
+        if (user_find.photo_url != null){
+            if(user_find.photo_url != `${STORAGE_URL}default.png`){
+                await delete_file_from_supabase(extract_file_name(user_find.photo_url))
             }
         }
+        const user_delete = await prisma.users.update({ where: { id_user: id_user_delete }, data: { status_user: user_status = user_status ? false : true,photo_url : `${STORAGE_URL}default.png` } });
         // Invalidate cache
         await deleteCachedData(`user:${id_user_delete}`);
 
