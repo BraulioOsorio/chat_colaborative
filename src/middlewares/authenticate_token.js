@@ -12,6 +12,10 @@ import zlib from 'zlib';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const upload = multer({
   storage: multer.memoryStorage(),
+  limits: {
+    fieldSize: 25 * 1024 * 1024, // 25 MB
+    fileSize: 25 * 1024 * 1024 // 25 MB
+  }
 });
 
 const compress_image = async (buffer) => {
