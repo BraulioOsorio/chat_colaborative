@@ -77,4 +77,25 @@ export const allCacheKeys = async () => {
         console.error('Error al obtener las llaves del cache:', error);
     }
 };
+
+export const invalidateUserListCache = async () => {
+    try {
+        const roles = ['SUPERADMIN', 'ADMIN'];
+        const pagesToClear = 5; // Clear cache for the first 5 pages
+
+        for (const role of roles) {
+            for (let page = 1; page <= pagesToClear; page++) {
+                const key = `users:${page}:*:${role}`;
+                const keys = await redisClient.keys(key);
+                if (keys.length > 0) {
+                    await redisClient.del(keys);
+                }
+            }
+        }
+        console.log('User list cache invalidated');
+    } catch (error) {
+        console.error('Error al invalidar el cache de la lista de usuarios:', error);
+    }
+};
+
 export default {generate_user_id,create_access_token};

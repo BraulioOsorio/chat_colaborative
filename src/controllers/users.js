@@ -1,7 +1,7 @@
 import { prisma } from '../core/db/index.js';
 import {hashSync} from 'bcrypt';
 import { validate_role } from '../core/checks/validations_users.js';
-import { extract_file_name, generate_user_id, cacheData, getCachedData, deleteCachedData } from '../core/config/utils.js';
+import { extract_file_name, generate_user_id, cacheData, getCachedData, deleteCachedData, invalidateUserListCache } from '../core/config/utils.js';
 import { upload_middleware, upload_file_to_supabase, delete_file_from_supabase } from '../middlewares/authenticate_token.js';
 import { STORAGE_URL } from '../core/config/config.js';
 
@@ -188,8 +188,11 @@ export const update_user = async (req, res) => {
             user_update = await prisma.users.update({ where: { id_user: id_user_update }, data: req.body });
         }
 
-        // Invalidate cache
+        // Invalidate user cache
         await deleteCachedData(`user:${id_user_update}`);
+        
+        // Invalidate user list cache
+        await invalidateUserListCache();
         
         return res.json(user_update)
     } catch (error) {
@@ -217,8 +220,13 @@ export const delete_user = async (req, res) => {
                 photo_url: `${STORAGE_URL}default.png` 
             } 
         });
-        // Invalidate cache
+        // Invalidate user cache
         await deleteCachedData(`user:${id_user_delete}`);
+        
+        // Invalidate user list cache
+        await invalidateUserListCache();
+
+        console.log('User deleted, cache invalidated');
 
         return res.json(user_delete)
     } catch (error) {
