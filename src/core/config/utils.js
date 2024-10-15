@@ -62,7 +62,7 @@ export const deleteCachedData = async (key) => {
 export const clearCache = async () => {
     try {
         await redisClient.del('*');
-        
+        console.log('Cache limpiado');
     } catch (error) {
         console.error('Error al limpiar el cache:', error);
     }
@@ -71,7 +71,7 @@ export const clearCache = async () => {
 export const allCacheKeys = async () => {
     try {
         const keys = await redisClient.keys('*');
-        
+        console.log('Llaves en el cache:', keys);
         return keys;
     } catch (error) {
         console.error('Error al obtener las llaves del cache:', error);
@@ -92,7 +92,7 @@ export const invalidateUserListCache = async () => {
                 }
             }
         }
-        
+        console.log('User list cache invalidated');
     } catch (error) {
         console.error('Error al invalidar el cache de la lista de usuarios:', error);
     }

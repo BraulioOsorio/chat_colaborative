@@ -25,7 +25,7 @@ async function createUsers(count, roleId) {
 }
 
 export async function generate_user() {
-    
+    console.log('Starting to seed users...');
 
     const roles = await Promise.all([
         prisma.roles.upsert({
@@ -50,5 +50,5 @@ export async function generate_user() {
     await createUsers(ADMIN_COUNT, 2);      // Admin
     await createUsers(AGENT_COUNT, 3);      // Agent
 
-    
+    console.log('User seeding finished.');
 }

@@ -9,13 +9,12 @@ const redisClient = createClient({
     }
 });
 // Manejar errores de conexión
-redisClient.on('error', (err) => 
+redisClient.on('error', (err) => console.log('Error de Redis', err));
 
 // Conectar al cliente Redis
 const connectRedis = async () => {
     try {
         await redisClient.connect();
-        
     } catch (err) {
         console.error('Error al conectar a Redis:', err);
     }
